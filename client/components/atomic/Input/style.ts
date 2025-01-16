@@ -1,4 +1,4 @@
-import { colors } from "@utils/theme";
+import { COLORS } from "@/theme";
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
@@ -35,7 +35,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 2,
     borderRadius: 100,
-    borderColor: colors.REDFFA39E,
+    borderColor: COLORS.REDFFA39E,
   },
   successContainer: {
     flexDirection: "row",
@@ -48,6 +48,6 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 2,
     borderRadius: 100,
-    borderColor: colors.GREENB7EB8F,
+    borderColor: COLORS.GREENB7EB8F,
   },
 });
