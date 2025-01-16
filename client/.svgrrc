@@ -1,0 +1,10 @@
+{
+  "replaceAttrValues": {
+    "#000": "{props.fill}",
+    "#000000": "{props.fill}",
+    "#ffffff": "{props.fill}"
+  },
+  "native": true,
+  "typescript": true,
+  "expandProps": true
+}
