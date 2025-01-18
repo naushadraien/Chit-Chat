@@ -18,7 +18,7 @@ export const Divider: FC<DividerType> = ({
       style={{
         height,
         width,
-        backgroundColor: COLORS[color ?? "PRIMARY"],
+        backgroundColor: COLORS[color ?? "GREY100"],
       }}
     />
   );

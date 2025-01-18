@@ -6,6 +6,7 @@ const FONTFAMILIES = {
   MULISH_EXTRABOLD: "Mulish-ExtraBold",
   MULISH_MEDIUM: "Mulish-Medium",
   MULISH_SEMIBOLD: "Mulish-SemiBold",
+  LATO_BOLD: "Lato-Bold",
 } as const;
 
 const FONTSIZES = {

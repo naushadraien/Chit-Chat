@@ -1,8 +1,7 @@
+import { DUMMY_PROFILE_IMAGE } from "@/assets/images";
 import { COLORS, ColorsType } from "@/theme";
 import React, { memo } from "react";
-import { Image, View, StyleSheet, ViewStyle, ImageStyle } from "react-native";
-
-const DEFAULT_IMAGE = require("../../../assets/images/dummy-profile-img.png");
+import { Image, ImageStyle, StyleSheet, View, ViewStyle } from "react-native";
 
 type AvatarSize = 20 | 24 | 30 | 34 | 40 | 45 | 50 | 60 | 70 | 80 | 90 | 100;
 
@@ -44,7 +43,7 @@ const AvatarBase: React.FC<AvatarProps> = ({
     ]}
   >
     <Image
-      source={imageUri ? { uri: imageUri } : DEFAULT_IMAGE}
+      source={imageUri ? { uri: imageUri } : DUMMY_PROFILE_IMAGE}
       style={[styles.image, getImageStyle(size)]}
     />
   </View>

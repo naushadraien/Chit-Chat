@@ -26,6 +26,7 @@ export default function RootLayout() {
     "Mulish-ExtraBold": require("../assets/fonts/Mulish-ExtraBold.ttf"),
     "Mulish-Medium": require("../assets/fonts/Mulish-Medium.ttf"),
     "Mulish-SemiBold": require("../assets/fonts/Mulish-SemiBold.ttf"),
+    "Lato-Bold": require("../assets/fonts/Lato-Bold.ttf"),
   });
 
   useEffect(() => {
