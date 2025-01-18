@@ -1,14 +1,15 @@
-export type CommonPros = {
+export type CommonProPs = {
   gradientColor?: readonly [string, string, ...string[]];
   enableGradient?: boolean;
   isOnline?: boolean;
+  borderType?: "rounded" | "square";
 };
 
-export interface AvatarWithImageProps extends CommonPros {
+export interface AvatarWithImageProps extends CommonProPs {
   imgUri?: string;
 }
 
-export interface WithoutImageProps extends CommonPros {
+export interface WithoutImageProps extends CommonProPs {
   firstName?: string;
   lastName?: string;
 }

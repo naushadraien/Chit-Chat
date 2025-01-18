@@ -23,7 +23,7 @@ export default function HomeScreen() {
         <Typography>Hello I am testing</Typography>
         <Divider />
         <Avatar variant="WithoutImage" enableGradient />
-        <Avatar variant="Image" isOnline />
+        <Avatar variant="Image" enableGradient isOnline />
         <UploadStory />
         <Dot enableBorderColor />
         <InputField placeholder="Test" />

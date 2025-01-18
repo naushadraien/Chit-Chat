@@ -1,5 +1,5 @@
 import { DUMMY_PROFILE_IMAGE } from "@/assets/images";
-import { COLORS } from "@/theme";
+import { COLORS, RADII } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, View } from "react-native";
@@ -15,6 +15,7 @@ export default function AvatarWithImage({
   imgUri,
   enableGradient = false,
   isOnline,
+  borderType = "square",
 }: AvatarWithImageProps) {
   return (
     <View
@@ -22,6 +23,8 @@ export default function AvatarWithImage({
         width: 56,
         height: 56,
         position: "relative",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {enableGradient && (
@@ -33,29 +36,18 @@ export default function AvatarWithImage({
             left: 0,
             right: 0,
             bottom: 0,
-            padding: 2,
-            borderRadius: 18,
+            borderRadius: RADII.RADIUS_18,
           }}
         />
       )}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "white",
-          overflow: "hidden",
-          borderRadius: 18,
-          margin: 2,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <ImageWrapper imgUri={imgUri} />
-      </View>
+
+      <ImageWrapper imgUri={imgUri} />
       {isOnline && (
         <Dot
           style={{
             position: "absolute",
             right: 0,
+            top: 0,
             zIndex: 1,
           }}
           enableBorderColor
@@ -76,10 +68,12 @@ function ImageWrapper({ imgUri }: { imgUri?: string }) {
           : DUMMY_PROFILE_IMAGE
       }
       style={{
-        width: 48,
-        height: 48,
+        width: 50,
+        height: 50,
         resizeMode: "cover",
         borderRadius: 16,
+        borderWidth: 2,
+        borderColor: COLORS.WHITE,
       }}
     />
   );

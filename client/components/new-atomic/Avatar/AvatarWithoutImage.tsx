@@ -1,9 +1,9 @@
 import { Typography } from "@/components/atomic/Typography";
-import { COLORS } from "@/theme";
+import { COLORS, RADII } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { View } from "react-native";
-import { WithoutImageProps } from "./types";
+import { CommonProPs, WithoutImageProps } from "./types";
 import { Dot } from "../Dot";
 
 const getFirstLetter = (word: string) => {
@@ -20,6 +20,7 @@ export default function AvatarWithoutImage({
   lastName,
   enableGradient = false,
   isOnline,
+  borderType = "square",
 }: WithoutImageProps) {
   return (
     <View
@@ -27,6 +28,8 @@ export default function AvatarWithoutImage({
         width: 56,
         height: 56,
         position: "relative",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {enableGradient && (
@@ -38,29 +41,22 @@ export default function AvatarWithoutImage({
             left: 0,
             right: 0,
             bottom: 0,
-            padding: 2,
-            borderRadius: 18,
+            borderRadius: RADII.RADIUS_18,
           }}
         />
       )}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "white",
-          overflow: "hidden",
-          borderRadius: 18,
-          margin: 2,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <WithoutImage firstName={firstName} lastName={lastName} />
-      </View>
+
+      <WithoutImage
+        firstName={firstName}
+        lastName={lastName}
+        borderType={borderType}
+      />
       {isOnline && (
         <Dot
           style={{
             position: "absolute",
             right: 0,
+            top: 0,
             zIndex: 1,
           }}
           enableBorderColor
@@ -73,19 +69,28 @@ export default function AvatarWithoutImage({
 function WithoutImage({
   firstName,
   lastName,
+  borderType = "square",
 }: {
   firstName?: string;
   lastName?: string;
+  borderType?: CommonProPs["borderType"];
 }) {
   return (
     <View
       style={{
-        width: 48,
-        height: 48,
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: COLORS.BLUE166FF6,
-        borderRadius: 16,
+        borderRadius:
+          borderType === "square"
+            ? 16
+            : borderType === "rounded"
+            ? RADII.PILL
+            : 0,
+        width: 50,
+        height: 50,
+        borderWidth: 2,
+        borderColor: COLORS.WHITE,
       }}
     >
       <Typography color="WHITE" fontFamily="LATO_BOLD">
