@@ -32,14 +32,16 @@ export const InputField = forwardRef<TextInput, InputProps>(
 
     return (
       <View style={[styles.container, inputRestProps.mainContainerStyle]}>
-        <Typography
-          fontFamily="MULISH_SEMIBOLD"
-          fontSize="MD"
-          color={error && touched ? "REDFF7875" : "GREY700"}
-          style={labelStyle}
-        >
-          {label}
-        </Typography>
+        {label && (
+          <Typography
+            fontFamily="MULISH_SEMIBOLD"
+            fontSize="MD"
+            color={error && touched ? "REDFF7875" : "GREY700"}
+            style={labelStyle}
+          >
+            {label}
+          </Typography>
+        )}
         <View
           style={[
             styles.inputContainer,
@@ -100,8 +102,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.GREYF7F7FC,
   },
   input: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    marginTop: 4,
     fontSize: FONTSIZES.MD,
     flex: 1,
     height: 36,

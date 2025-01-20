@@ -4,6 +4,7 @@ import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
 import { Avatar } from "@/components/new-atomic/Avatar";
+import { ChatInput } from "@/components/new-atomic/ChatInput";
 import { Dot } from "@/components/new-atomic/Dot";
 import { InputField } from "@/components/new-atomic/Input";
 import { MenuItem } from "@/components/new-atomic/MenuItem";
@@ -13,7 +14,7 @@ import { View } from "react-native";
 
 export default function HomeScreen() {
   return (
-    <SafeAreaWrapper>
+    <SafeAreaWrapper bottomInset={0}>
       <View
         style={{
           flexGrow: 1,
@@ -35,6 +36,7 @@ export default function HomeScreen() {
           phone="+62 1309 - 1710 - 1920"
           userName="Almayra Zamzamy"
         />
+        <ChatInput />
       </View>
     </SafeAreaWrapper>
   );
