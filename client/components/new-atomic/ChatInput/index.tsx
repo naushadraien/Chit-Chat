@@ -55,7 +55,6 @@ export function ChatInput({
       }}
     >
       <SvgIcon name="plus-icon" size={14} onPress={onPressPlus} />
-      /
       <InputField
         mainContainerStyle={{
           flex: 1,

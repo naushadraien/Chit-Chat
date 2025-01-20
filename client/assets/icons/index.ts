@@ -11,6 +11,8 @@ import PlusIcon from "./plus-icon.svg";
 import PrivacyIcon from "./privacy.svg";
 import UserIcon from "./user.svg";
 import SendIcon from "./send.svg";
+import SearchIcon from "./search-icon.svg";
+import MenuIcon from "./menu-icon.svg";
 
 const Icons = {
   "back-btn": BackBTN,
@@ -26,6 +28,8 @@ const Icons = {
   "privacy-icon": PrivacyIcon,
   "user-icon": UserIcon,
   "send-icon": SendIcon,
+  "search-icon": SearchIcon,
+  "menu-icon": MenuIcon,
 } as const;
 
 type IconNameType = keyof typeof Icons;

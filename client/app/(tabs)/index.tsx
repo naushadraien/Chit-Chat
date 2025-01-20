@@ -10,17 +10,20 @@ import { InputField } from "@/components/new-atomic/Input";
 import { MenuItem } from "@/components/new-atomic/MenuItem";
 import { MenuItemWithAvatar } from "@/components/new-atomic/MenuItemWithAvatar";
 import { UploadStory } from "@/components/new-atomic/UploadStory";
-import { View } from "react-native";
+import { Header } from "@/Layout/Header";
+import { ScrollView, View } from "react-native";
 
 export default function HomeScreen() {
   return (
     <SafeAreaWrapper bottomInset={0}>
-      <View
-        style={{
+      <ScrollView
+        contentContainerStyle={{
           flexGrow: 1,
           paddingHorizontal: 19,
+          paddingBottom: 100,
           gap: 10,
         }}
+        showsVerticalScrollIndicator={false}
       >
         <SvgIcon name="email-icon" fill="REDFF4D4F" />
         <Typography>Hello I am testing</Typography>
@@ -36,8 +39,11 @@ export default function HomeScreen() {
           phone="+62 1309 - 1710 - 1920"
           userName="Almayra Zamzamy"
         />
-        <ChatInput />
-      </View>
+        <Header variant="WithBackBTN" />
+        <Header variant="WithTitle" title="Your Profile" />
+        <Header variant="WithSearch" title="Athalia Putri" />
+      </ScrollView>
+      <ChatInput />
     </SafeAreaWrapper>
   );
 }

@@ -38,6 +38,7 @@ const LINEHEIGHTS = {
   LG: 28,
   XL: 32,
   XXL: 40,
+  CUSTOM_30: 30,
 } as const;
 
 type FontFamilyType = keyof typeof FONTFAMILIES;
