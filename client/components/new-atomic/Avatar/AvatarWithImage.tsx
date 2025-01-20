@@ -3,7 +3,7 @@ import { COLORS, RADII } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, View } from "react-native";
-import { AvatarWithImageProps } from "./types";
+import { AvatarWithImageProps, CommonProPs } from "./types";
 import { Dot } from "../Dot";
 
 export default function AvatarWithImage({
@@ -36,12 +36,17 @@ export default function AvatarWithImage({
             left: 0,
             right: 0,
             bottom: 0,
-            borderRadius: RADII.RADIUS_18,
+            borderRadius:
+              borderType === "square"
+                ? RADII.RADIUS_18
+                : borderType === "rounded"
+                ? RADII.PILL
+                : 0,
           }}
         />
       )}
 
-      <ImageWrapper imgUri={imgUri} />
+      <ImageWrapper imgUri={imgUri} borderType={borderType} />
       {isOnline && (
         <Dot
           style={{
@@ -57,7 +62,13 @@ export default function AvatarWithImage({
   );
 }
 
-function ImageWrapper({ imgUri }: { imgUri?: string }) {
+function ImageWrapper({
+  imgUri,
+  borderType = "square",
+}: {
+  imgUri?: string;
+  borderType?: CommonProPs["borderType"];
+}) {
   return (
     <Image
       source={
@@ -71,7 +82,12 @@ function ImageWrapper({ imgUri }: { imgUri?: string }) {
         width: 50,
         height: 50,
         resizeMode: "cover",
-        borderRadius: 16,
+        borderRadius:
+          borderType === "square"
+            ? 16
+            : borderType === "rounded"
+            ? RADII.PILL
+            : 0,
         borderWidth: 2,
         borderColor: COLORS.WHITE,
       }}

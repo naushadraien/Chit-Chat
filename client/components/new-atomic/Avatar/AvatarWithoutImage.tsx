@@ -41,7 +41,12 @@ export default function AvatarWithoutImage({
             left: 0,
             right: 0,
             bottom: 0,
-            borderRadius: RADII.RADIUS_18,
+            borderRadius:
+              borderType === "square"
+                ? RADII.RADIUS_18
+                : borderType === "rounded"
+                ? RADII.PILL
+                : 0,
           }}
         />
       )}

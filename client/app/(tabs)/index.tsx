@@ -6,6 +6,8 @@ import { Typography } from "@/components/atomic/Typography";
 import { Avatar } from "@/components/new-atomic/Avatar";
 import { Dot } from "@/components/new-atomic/Dot";
 import { InputField } from "@/components/new-atomic/Input";
+import { MenuItem } from "@/components/new-atomic/MenuItem";
+import { MenuItemWithAvatar } from "@/components/new-atomic/MenuItemWithAvatar";
 import { UploadStory } from "@/components/new-atomic/UploadStory";
 import { View } from "react-native";
 
@@ -28,6 +30,11 @@ export default function HomeScreen() {
         <Dot enableBorderColor />
         <InputField placeholder="Test" />
         <FilledButton title="Test123" />
+        <MenuItem iconName="user-icon" title="Account" />
+        <MenuItemWithAvatar
+          phone="+62 1309 - 1710 - 1920"
+          userName="Almayra Zamzamy"
+        />
       </View>
     </SafeAreaWrapper>
   );

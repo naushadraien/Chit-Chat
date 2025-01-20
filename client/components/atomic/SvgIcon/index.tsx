@@ -15,7 +15,7 @@ interface IconProps extends Omit<SvgProps, "width" | "height"> {
 const SvgIconBase = ({
   name,
   size = 24,
-  fill = "PRIMARY",
+  fill = "INPUTTEXTCOLOR",
   stroke,
   onPress,
   ...props
