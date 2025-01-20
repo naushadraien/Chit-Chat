@@ -11,7 +11,7 @@ import { MenuItem } from "@/components/new-atomic/MenuItem";
 import { MenuItemWithAvatar } from "@/components/new-atomic/MenuItemWithAvatar";
 import { UploadStory } from "@/components/new-atomic/UploadStory";
 import { Header } from "@/Layout/Header";
-import { ScrollView, View } from "react-native";
+import { ScrollView } from "react-native";
 
 export default function HomeScreen() {
   return (
