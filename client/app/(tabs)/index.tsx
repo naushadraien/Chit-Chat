@@ -10,6 +10,7 @@ import { Dot } from "@/components/new-atomic/Dot";
 import { InputField } from "@/components/new-atomic/Input";
 import { MenuItem } from "@/components/new-atomic/MenuItem";
 import { MenuItemWithAvatar } from "@/components/new-atomic/MenuItemWithAvatar";
+import { TypingIndicator } from "@/components/new-atomic/TypingIndicator";
 import { UploadStory } from "@/components/new-atomic/UploadStory";
 import { mockChats } from "@/constants/chats/DummyData";
 import { Header } from "@/Layout/Header";
@@ -49,6 +50,11 @@ export default function HomeScreen() {
             <ChatContent key={idx} isMe={item.isMe} message={item.message} />
           );
         })}
+        <TypingIndicator
+          isMe={true}
+          // avatarUrl="https://example.com/avatar.jpg"
+          userName="John"
+        />
       </ScrollView>
       <ChatInput />
     </SafeAreaWrapper>
