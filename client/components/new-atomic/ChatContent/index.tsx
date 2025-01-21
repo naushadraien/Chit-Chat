@@ -38,7 +38,7 @@ export function ChatContent({ isMe, message }: ChatContentProps) {
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "flex-end",
+            justifyContent: isMe ? "flex-end" : "flex-start",
             marginTop: SPACINGS.XS,
           }}
         >
