@@ -12,6 +12,7 @@ import { MenuItem } from "@/components/new-atomic/MenuItem";
 import { MenuItemWithAvatar } from "@/components/new-atomic/MenuItemWithAvatar";
 import { TypingIndicator } from "@/components/new-atomic/TypingIndicator";
 import { UploadStory } from "@/components/new-atomic/UploadStory";
+import ChatCard from "@/components/ui/ChatCard";
 import { mockChats } from "@/constants/chats/DummyData";
 import { Header } from "@/Layout/Header";
 import { ScrollView } from "react-native";
@@ -54,6 +55,12 @@ export default function HomeScreen() {
           isMe={true}
           // avatarUrl="https://example.com/avatar.jpg"
           userName="John"
+        />
+        <ChatCard
+          name="Athalia Putri"
+          content="Good morning, did you sleep well?"
+          date="Today"
+          messageUnreadCount={1}
         />
       </ScrollView>
       <ChatInput />
