@@ -6,6 +6,7 @@ import { Typography } from "@/components/atomic/Typography";
 import { Avatar } from "@/components/new-atomic/Avatar";
 import { ChatContent } from "@/components/new-atomic/ChatContent";
 import { ChatInput } from "@/components/new-atomic/ChatInput";
+import CustomCountryPicker from "@/components/new-atomic/CustomCountryPicker";
 import { Dot } from "@/components/new-atomic/Dot";
 import { InputField } from "@/components/new-atomic/Input";
 import { MenuItem } from "@/components/new-atomic/MenuItem";
@@ -15,9 +16,20 @@ import { UploadStory } from "@/components/new-atomic/UploadStory";
 import ChatCard from "@/components/ui/ChatCard";
 import { mockChats } from "@/constants/chats/DummyData";
 import { Header } from "@/Layout/Header";
+import { useState } from "react";
 import { ScrollView } from "react-native";
 
 export default function HomeScreen() {
+  const [countryCode, setCountryCode] = useState("+353");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  const handleCountryCodeChange = (code: string) => {
+    setCountryCode(code);
+  };
+
+  const handlePhoneNumberChange = (phone: string) => {
+    setPhoneNumber(phone);
+  };
   return (
     <SafeAreaWrapper bottomInset={0}>
       <ScrollView
@@ -61,6 +73,12 @@ export default function HomeScreen() {
           content="Good morning, did you sleep well?"
           date="Today"
           messageUnreadCount={1}
+        />
+        <CustomCountryPicker
+          defaultCountryCode={countryCode}
+          defaultPhoneNumber={phoneNumber}
+          onCountryCodeChange={handleCountryCodeChange}
+          onPhoneNumberChange={handlePhoneNumberChange}
         />
       </ScrollView>
       <ChatInput />

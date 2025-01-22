@@ -51,16 +51,7 @@ export function ChatInput({
       }}
     >
       <SvgIcon name="plus-icon" size={14} onPress={onPressPlus} />
-      <InputField
-        mainContainerStyle={{
-          flex: 1,
-        }}
-        inputViewStyle={{
-          paddingVertical: 0,
-        }}
-        onChangeText={onChangeText}
-        value={value}
-      />
+      <InputField onChangeText={onChangeText} value={value} />
       <SvgIcon name="send-icon" size={18} onPress={onPressSend} />
     </View>
   );

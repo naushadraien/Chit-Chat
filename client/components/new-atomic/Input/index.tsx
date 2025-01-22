@@ -91,6 +91,7 @@ export const InputField = forwardRef<TextInput, InputProps>(
 const styles = StyleSheet.create({
   container: {
     gap: 6,
+    flex: 1,
   },
   inputContainer: {
     flexDirection: "row",
@@ -98,13 +99,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderRadius: 4,
     paddingHorizontal: 8,
-    paddingVertical: 6,
+    // paddingVertical: 6,
     backgroundColor: COLORS.GREYF7F7FC,
   },
   input: {
-    marginTop: 4,
+    // marginTop: 4,
     fontSize: FONTSIZES.MD,
     flex: 1,
+    paddingVertical: 6,
     height: 36,
     textAlign: "left",
     fontFamily: FONTFAMILIES.MULISH_SEMIBOLD,
