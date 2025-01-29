@@ -36,6 +36,9 @@ export function TypingIndicator({
           flexDirection: "row",
           alignItems: "center",
           gap: SPACINGS.XS,
+          ...(!isMe
+            ? { borderBottomLeftRadius: 0 }
+            : { borderBottomRightRadius: 0 }),
           ...Platform.select({
             ios: {
               shadowColor: "#000",

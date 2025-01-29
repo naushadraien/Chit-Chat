@@ -21,6 +21,9 @@ export function ChatContent({ isMe, message }: ChatContentProps) {
           backgroundColor: isMe ? COLORS.BRANDCOLOR : COLORS.WHITE,
           padding: SPACINGS.MD,
           borderRadius: RADII.MD,
+          ...(!isMe
+            ? { borderBottomLeftRadius: 0 }
+            : { borderBottomRightRadius: 0 }),
           ...Platform.select({
             ios: {
               shadowColor: "#000",
