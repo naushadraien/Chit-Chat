@@ -6,11 +6,13 @@ import { Typography } from "@/components/atomic/Typography";
 import { Avatar } from "@/components/new-atomic/Avatar";
 import { ChatContent } from "@/components/new-atomic/ChatContent";
 import { ChatInput } from "@/components/new-atomic/ChatInput";
+import { CodeInput } from "@/components/new-atomic/CodeInput";
 import CustomCountryPicker from "@/components/new-atomic/CustomCountryPicker";
 import { Dot } from "@/components/new-atomic/Dot";
 import { InputField } from "@/components/new-atomic/Input";
 import { MenuItem } from "@/components/new-atomic/MenuItem";
 import { MenuItemWithAvatar } from "@/components/new-atomic/MenuItemWithAvatar";
+import ProfilePicUpload from "@/components/new-atomic/ProfilePicUpload";
 import { TypingIndicator } from "@/components/new-atomic/TypingIndicator";
 import { UploadStory } from "@/components/new-atomic/UploadStory";
 import ChatCard from "@/components/ui/ChatCard";
@@ -80,6 +82,8 @@ export default function HomeScreen() {
           onCountryCodeChange={handleCountryCodeChange}
           onPhoneNumberChange={handlePhoneNumberChange}
         />
+        <CodeInput inputCount={6} handleCodeInput={(val) => {}} />
+        <ProfilePicUpload isUploading={true} />
       </ScrollView>
       <ChatInput />
     </SafeAreaWrapper>

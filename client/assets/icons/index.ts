@@ -13,6 +13,7 @@ import UserIcon from "./user.svg";
 import SendIcon from "./send.svg";
 import SearchIcon from "./search-icon.svg";
 import MenuIcon from "./menu-icon.svg";
+import UploadPlusIcon from "./upload-plus-icon.svg";
 
 const Icons = {
   "back-btn": BackBTN,
@@ -30,6 +31,7 @@ const Icons = {
   "send-icon": SendIcon,
   "search-icon": SearchIcon,
   "menu-icon": MenuIcon,
+  "upload-plus-icon": UploadPlusIcon,
 } as const;
 
 type IconNameType = keyof typeof Icons;
