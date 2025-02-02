@@ -11,6 +11,7 @@ interface FilledButtonProps {
   onPress?: () => void;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  fullWidth?: boolean;
 }
 
 export function FilledButton({
@@ -21,6 +22,7 @@ export function FilledButton({
   style,
   title,
   disabled,
+  fullWidth = false,
 }: FilledButtonProps) {
   return (
     <Pressable
@@ -31,6 +33,7 @@ export function FilledButton({
           alignItems: "center",
           backgroundColor: COLORS[bgColor],
           paddingVertical: SPACINGS.MD,
+          width: fullWidth ? "100%" : "auto",
         },
         style,
       ]}

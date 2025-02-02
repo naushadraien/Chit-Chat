@@ -14,6 +14,9 @@ import SendIcon from "./send.svg";
 import SearchIcon from "./search-icon.svg";
 import MenuIcon from "./menu-icon.svg";
 import UploadPlusIcon from "./upload-plus-icon.svg";
+import ChatIllustrationIcon from "./Illustration.svg";
+import EyeCloseIcon from "./eye-close.svg";
+import EyeOpenIcon from "./eye-open.svg";
 
 const Icons = {
   "back-btn": BackBTN,
@@ -32,6 +35,9 @@ const Icons = {
   "search-icon": SearchIcon,
   "menu-icon": MenuIcon,
   "upload-plus-icon": UploadPlusIcon,
+  "chat-illustration-icon": ChatIllustrationIcon,
+  "eye-close-icon": EyeCloseIcon,
+  "eye-open-icon": EyeOpenIcon,
 } as const;
 
 type IconNameType = keyof typeof Icons;

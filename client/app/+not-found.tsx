@@ -1,32 +1,25 @@
-import { Link, Stack } from "expo-router";
-import { StyleSheet } from "react-native";
-
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { FilledButton } from "@/components/atomic/Button/FilledButton";
+import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
+import { Typography } from "@/components/atomic/Typography";
+import { FontAwesome6 } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { View } from "react-native";
 
 export default function NotFoundScreen() {
   return (
-    <>
-      <Stack.Screen options={{ title: "Oops!" }} />
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">This screen doesn't exist.</ThemedText>
-        <Link href="/" style={styles.link}>
-          <ThemedText type="link">Go to home screen!</ThemedText>
-        </Link>
-      </ThemedView>
-    </>
+    <SafeAreaWrapper
+      style={{ alignItems: "center", justifyContent: "center", gap: 20 }}
+    >
+      <View style={{ flexDirection: "row", gap: 20 }}>
+        <FontAwesome6 name="4" size={34} color="black" />
+        <FontAwesome6 name="0" size={34} color="black" />
+        <FontAwesome6 name="4" size={34} color="black" />
+      </View>
+      <Typography textAlign="center">
+        The Screen you are trying to navigate doesnot exists!!!
+      </Typography>
+
+      <FilledButton title="Go Back To Home" onPress={() => router.push("/")} />
+    </SafeAreaWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-});

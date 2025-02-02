@@ -15,7 +15,6 @@ import {
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
-  touched?: boolean;
   inputViewStyle?: StyleProp<ViewStyle>;
   mainContainerStyle?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
@@ -24,10 +23,7 @@ interface InputProps extends TextInputProps {
 }
 
 export const InputField = forwardRef<TextInput, InputProps>(
-  (
-    { label, leftIcon, rightIcon, error, touched, labelStyle, ...restProps },
-    ref
-  ) => {
+  ({ label, leftIcon, rightIcon, error, labelStyle, ...restProps }, ref) => {
     const { style: inputStyle, ...inputRestProps } = restProps;
 
     return (
@@ -36,7 +32,7 @@ export const InputField = forwardRef<TextInput, InputProps>(
           <Typography
             fontFamily="MULISH_SEMIBOLD"
             fontSize="MD"
-            color={error && touched ? "REDFF7875" : "GREY700"}
+            color={error ? "REDFF7875" : "GREY700"}
             style={labelStyle}
           >
             {label}
@@ -59,8 +55,7 @@ export const InputField = forwardRef<TextInput, InputProps>(
             style={[
               styles.input,
               {
-                color:
-                  error && touched ? COLORS.REDFF4D4F : COLORS.INPUTTEXTCOLOR,
+                color: error ? COLORS.REDFF4D4F : COLORS.INPUTTEXTCOLOR,
               },
               ,
               inputStyle,
@@ -69,7 +64,7 @@ export const InputField = forwardRef<TextInput, InputProps>(
           />
           {React.isValidElement(rightIcon) && rightIcon}
         </View>
-        {error && touched && (
+        {error && (
           <View style={styles.errorContainer}>
             <View style={styles.errorIconContainer}>
               <Ionicons name="alert" size={15} color={COLORS.REDFF4D4F} />
@@ -78,6 +73,9 @@ export const InputField = forwardRef<TextInput, InputProps>(
               fontFamily="MULISH_SEMIBOLD"
               fontSize="MD"
               color="REDFF4D4F"
+              style={{
+                flex: 1,
+              }}
             >
               {error}
             </Typography>
