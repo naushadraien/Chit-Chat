@@ -3,7 +3,11 @@ import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  firstName?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  lastName?: string;
 
   @IsString()
   @IsEmail()

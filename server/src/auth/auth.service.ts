@@ -55,7 +55,7 @@ export class AuthService {
     if (!isPasswordMatched)
       throw new UnauthorizedException('Invalid Credentials!');
 
-    return { id: user.id, name: user.name };
+    return { id: user.id, firstName: user.firstName, lastName: user.lastName };
   }
 
   async login(userId: string, name?: string) {
@@ -98,7 +98,7 @@ export class AuthService {
     );
     if (!isRefreshTokenMatched)
       throw new UnauthorizedException('Invalid refresh token');
-    return { id: user.id, name: user.name };
+    return { id: user.id, firstName: user.firstName, lastName: user.lastName };
   }
 
   async refresh(userId: string, name: string) {
