@@ -4,7 +4,6 @@ import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
 import { InputField } from "@/components/new-atomic/Input";
-import { LoginFormData } from "@/schema/login.schema";
 import registerSchema, { RegisterFormData } from "@/schema/register.schema";
 import { COLORS, FONTFAMILIES } from "@/theme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,9 +38,9 @@ const RegisterScreen = () => {
       name: "",
     },
   });
-  console.log("🚀 ~ Login ~ errors:", errors);
+  console.log("🚀 ~ RegisterScreen ~ errors:", errors);
 
-  const onSubmit = (data: LoginFormData) => {
+  const onSubmit = (data: RegisterFormData) => {
     console.log("🚀 ~ onSubmit ~ data:", data);
   };
 
