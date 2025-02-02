@@ -13,7 +13,7 @@
 #ENV ignore
 .env
 .env.development.local
-*.env
+# *.env
 *.env.development.local
 
 # Logs
