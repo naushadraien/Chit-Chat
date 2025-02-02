@@ -17,6 +17,9 @@ export class User {
   @Prop({ default: null })
   hashedRefreshToken: string;
 
+  @Prop({ default: null })
+  avatar: string;
+
   @Prop({
     required: true,
     validate: {
