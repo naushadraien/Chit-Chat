@@ -8,11 +8,12 @@ import {
   MAX_FILE_SIZE,
 } from 'src/upload/constants/file-validation.constants';
 
-export const ValidateFile = () => {
+export const ValidateFile = (isFileRequired: boolean = true) => {
   return new ParseFilePipe({
     validators: [
       new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE }),
       new FileTypeValidator({ fileType: ALLOWED_FILE_TYPES }),
     ],
+    fileIsRequired: isFileRequired,
   });
 };

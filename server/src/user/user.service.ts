@@ -75,23 +75,28 @@ export class UserService {
     return resultWithExec;
   }
 
-  async update(
-    userId: string,
-    updateUserDto: UpdateUserDto,
-    file: Express.Multer.File,
-  ) {
+  async update(userId: string, updateUserDto: UpdateUserDto) {
     if (!userId) throw new BadRequestException('User id is required');
-
-    const uploadedFile = await this.uploadService.uploadFile(file);
-
     return await this.userModel
       .findByIdAndUpdate(
         userId,
         {
           ...updateUserDto,
-          ...(uploadedFile.url && {
-            avatar: uploadedFile.url,
-          }),
+        },
+        { new: true },
+      )
+      .select('-password -hashedRefreshToken -otp -otpExpiresAt')
+      .lean()
+      .exec();
+  }
+
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    const uploadedFile = await this.uploadService.uploadFile(file);
+    return await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          avatar: uploadedFile.url,
         },
         { new: true },
       )

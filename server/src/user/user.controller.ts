@@ -23,13 +23,20 @@ export class UserController {
   }
 
   @Patch(':userId')
-  @UseInterceptors(FileInterceptor('file'))
   async update(
     @Body() updateUserDto: UpdateUserDto,
     @Param('userId') userId: string,
-    @UploadedFile(ValidateFile())
-    file?: Express.Multer.File,
   ) {
-    return await this.userService.update(userId, updateUserDto, file);
+    return await this.userService.update(userId, updateUserDto);
+  }
+
+  @Patch(':userId/avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateAvatar(
+    @Param('userId') userId: string,
+    @UploadedFile(ValidateFile())
+    file: Express.Multer.File,
+  ) {
+    return await this.userService.updateAvatar(userId, file);
   }
 }
