@@ -4,6 +4,7 @@ import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
 import { InputField } from "@/components/new-atomic/Input";
+import { useAuth } from "@/providers/AuthProvider";
 import registerSchema, { RegisterFormData } from "@/schema/register.schema";
 import { COLORS, FONTFAMILIES } from "@/theme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,7 +36,6 @@ const RegisterScreen = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      name: "",
     },
   });
   console.log("🚀 ~ RegisterScreen ~ errors:", errors);
@@ -43,6 +43,9 @@ const RegisterScreen = () => {
   const onSubmit = (data: RegisterFormData) => {
     console.log("🚀 ~ onSubmit ~ data:", data);
   };
+
+  const { onLogin } = useAuth();
+  console.log("🚀 ~ RegisterScreen ~ onLogin:", onLogin);
 
   const handlePressEyeBtn = (
     key: keyof typeof isPressedEyeBtn,
@@ -105,23 +108,6 @@ const RegisterScreen = () => {
             >
               <Controller
                 control={control}
-                name="name"
-                render={({ field: { onChange, value } }) => (
-                  <InputField
-                    value={value}
-                    label="Name"
-                    placeholder="Name"
-                    autoFocus
-                    onChangeText={onChange}
-                    error={errors.name?.message}
-                    returnKeyType="next"
-                    ref={(el) => (refs[0] = el!)}
-                    onSubmitEditing={() => refs[1]?.focus()}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
                 name="email"
                 render={({ field: { onChange, value } }) => (
                   <InputField
@@ -135,8 +121,8 @@ const RegisterScreen = () => {
                     onChangeText={onChange}
                     error={errors.email?.message}
                     returnKeyType="next"
-                    ref={(el) => (refs[1] = el!)}
-                    onSubmitEditing={() => refs[2]?.focus()}
+                    ref={(el) => (refs[0] = el!)}
+                    onSubmitEditing={() => refs[1]?.focus()}
                   />
                 )}
               />
@@ -173,8 +159,8 @@ const RegisterScreen = () => {
                     error={errors.password?.message}
                     secureTextEntry={!isPressedEyeBtn}
                     returnKeyType="next"
-                    ref={(el) => (refs[2] = el!)}
-                    onSubmitEditing={() => refs[3]?.focus()}
+                    ref={(el) => (refs[1] = el!)}
+                    onSubmitEditing={() => refs[2]?.focus()}
                   />
                 )}
               />
@@ -210,8 +196,8 @@ const RegisterScreen = () => {
                     error={errors.confirmPassword?.message}
                     secureTextEntry={!isPressedEyeBtn}
                     returnKeyType="next"
-                    ref={(el) => (refs[3] = el!)}
-                    onSubmitEditing={() => refs[4]?.focus()}
+                    ref={(el) => (refs[2] = el!)}
+                    onSubmitEditing={() => refs[3]?.focus()}
                   />
                 )}
               />

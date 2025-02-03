@@ -1,13 +1,20 @@
 import { z } from "zod";
 
 const baseRegisterSchema = z.object({
-  name: z
-    .string({
-      required_error: "Name is required",
-      invalid_type_error: "Name must be a string",
-    })
-    .min(2, "Name must be 2 letters or more than that")
-    .max(50, "Name must be less than 50 characters"),
+  // firstName: z
+  //   .string({
+  //     required_error: "First Name is required",
+  //     invalid_type_error: "First Name must be a string",
+  //   })
+  //   .min(2, "First Name must be 2 letters or more than that")
+  //   .max(50, "First Name must be less than 50 characters"),
+  // lastName: z
+  //   .string({
+  //     required_error: "Last Name is required",
+  //     invalid_type_error: "Last Name must be a string",
+  //   })
+  //   .min(2, "Last Name must be 2 letters or more than that")
+  //   .max(50, "Last Name must be less than 50 characters"),
 
   email: z
     .string({
