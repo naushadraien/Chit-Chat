@@ -1,4 +1,4 @@
-import { AuthProviderContext } from "@/types";
+import { AuthProviderContext, UserDetails } from "@/types";
 import { createContext, PropsWithChildren, useContext, useState } from "react";
 
 const AuthContext = createContext<AuthProviderContext | undefined>(undefined);
@@ -9,6 +9,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     token: "",
   });
 
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const values: AuthProviderContext = {
@@ -16,6 +18,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     authState,
     isLoading,
     onLogout: async () => {},
+    onRegister: () => {},
   };
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };

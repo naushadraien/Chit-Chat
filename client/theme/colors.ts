@@ -66,4 +66,13 @@ export const COLORS = {
   NONE: undefined,
 } as const;
 
+export const TOASTCOLORS = {
+  success: "#4caf50",
+  error: "#f44336",
+  warning: "#ff9800",
+  info: "#2196f3",
+  white: "#FFFFFF",
+  text: "#1a1a1a",
+};
+
 export type ColorsType = keyof typeof COLORS;

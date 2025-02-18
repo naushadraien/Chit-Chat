@@ -13,6 +13,8 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import TanstackQueryProvider from "@/providers/TanstackQueryProvider";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AuthProvider } from "@/providers/AuthProvider";
+import { ToastProvider } from "@/providers/ToastProvider";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -43,10 +45,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaProvider>
-        <TanstackQueryProvider>
-          <StatusBar style="auto" />
-          <Slot />
-        </TanstackQueryProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <TanstackQueryProvider>
+              <StatusBar style="auto" />
+              <Slot />
+            </TanstackQueryProvider>
+          </AuthProvider>
+        </ToastProvider>
       </SafeAreaProvider>
     </ThemeProvider>
   );

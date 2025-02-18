@@ -5,11 +5,12 @@ import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
 import { InputField } from "@/components/new-atomic/Input";
 import { useAuth } from "@/providers/AuthProvider";
+import { showToast, useToast } from "@/providers/ToastProvider";
 import registerSchema, { RegisterFormData } from "@/schema/register.schema";
 import { COLORS, FONTFAMILIES } from "@/theme";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -38,6 +39,14 @@ const RegisterScreen = () => {
       confirmPassword: "",
     },
   });
+
+  useEffect(() => {
+    showToast({
+      type: "success",
+      message: "Hello",
+      duration: 1000000,
+    });
+  }, [showToast]);
   console.log("🚀 ~ RegisterScreen ~ errors:", errors);
 
   const onSubmit = (data: RegisterFormData) => {
