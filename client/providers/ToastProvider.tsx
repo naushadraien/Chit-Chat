@@ -1,7 +1,13 @@
 import { ToastMessage } from "@/components/new-atomic/ToastMessage";
 import { useCustomSafeInsets } from "@/hooks/useCustomSafeInsets";
 import { TOASTCOLORS } from "@/theme/colors";
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import { Animated, Platform, StyleSheet } from "react-native";
 
 export type ToastType = "success" | "error" | "info" | "warning";
@@ -33,21 +39,32 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [toast, setToast] = useState<ToastConfig | null>(null);
-  const [animation] = useState(new Animated.Value(0));
+  const animation = useRef(new Animated.Value(0)).current;
+  const progressAnimation = useRef(new Animated.Value(0)).current;
   const { top } = useCustomSafeInsets();
 
   const hideToast = useCallback(() => {
-    Animated.timing(animation, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => setToast(null));
-  }, [animation]);
+    Animated.parallel([
+      Animated.timing(animation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(progressAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+    ]).start(() => setToast(null));
+  }, [animation, progressAnimation]);
 
   const showToastMessage = useCallback(
     (config: ToastConfig) => {
       setToast(config);
       animation.setValue(0);
+      progressAnimation.setValue(1);
+
+      const duration = config.duration || 3000;
 
       Animated.sequence([
         Animated.timing(animation, {
@@ -55,7 +72,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           duration: 300,
           useNativeDriver: true,
         }),
-        Animated.delay(config.duration || 3000),
+        Animated.parallel([
+          Animated.timing(progressAnimation, {
+            toValue: 0,
+            duration: duration,
+            useNativeDriver: false,
+          }),
+          Animated.delay(duration),
+        ]),
         Animated.timing(animation, {
           toValue: 0,
           duration: 300,
@@ -63,7 +87,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
         }),
       ]).start(() => setToast(null));
     },
-    [animation]
+    [animation, progressAnimation]
   );
 
   // Set the function reference for external usage
@@ -98,6 +122,17 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           ]}
         >
           <ToastMessage toast={toast} onClose={hideToast} />
+          <Animated.View
+            style={[
+              styles.progressBar,
+              {
+                width: progressAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0%", "100%"],
+                }),
+              },
+            ]}
+          />
         </Animated.View>
       )}
     </ToastContext.Provider>
@@ -121,6 +156,13 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  progressBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    height: 3,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
   },
 });
 

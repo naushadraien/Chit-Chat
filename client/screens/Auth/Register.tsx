@@ -44,7 +44,7 @@ const RegisterScreen = () => {
     showToast({
       type: "success",
       message: "Hello",
-      duration: 1000000,
+      duration: 3000,
     });
   }, [showToast]);
   console.log("🚀 ~ RegisterScreen ~ errors:", errors);
