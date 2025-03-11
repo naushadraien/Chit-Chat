@@ -92,7 +92,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Set the function reference for external usage
   React.useEffect(() => {
-    toastFn = showToastMessage;
+    // When ToastProvider mounts, store the reference
+    toastFn = showToastMessage; // Now global showToast can work
+    // When ToastProvider unmounts, remove the reference
     return () => {
       toastFn = null;
     };
