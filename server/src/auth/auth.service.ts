@@ -31,21 +31,7 @@ export class AuthService {
   async registerUser(createUserDto: CreateUserDto) {
     const existedUser = await this.userService.findByEmail(createUserDto.email);
     if (existedUser) throw new ConflictException('User already exists');
-    const createdUser = await this.userService.create(createUserDto);
-    const { accessToken, refreshToken } = await this.generateTokens(
-      createdUser._id.toString(),
-    );
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    await this.userService.updateHashedRefreshToken(
-      createdUser._id.toString(),
-      hashedRefreshToken,
-    );
-
-    return {
-      ...createdUser,
-      accessToken,
-      refreshToken,
-    };
+    return await this.userService.create(createUserDto);
   }
 
   async validateUser(email: string, password: string) {

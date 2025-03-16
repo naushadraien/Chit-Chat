@@ -132,6 +132,8 @@ const RegisterScreen = () => {
                     returnKeyType="next"
                     ref={(el) => (refs[0] = el!)}
                     onSubmitEditing={() => refs[1]?.focus()}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
                   />
                 )}
               />
@@ -166,10 +168,11 @@ const RegisterScreen = () => {
                     }
                     onChangeText={onChange}
                     error={errors.password?.message}
-                    secureTextEntry={!isPressedEyeBtn}
+                    secureTextEntry={!isPressedEyeBtn.isPasswordField}
                     returnKeyType="next"
                     ref={(el) => (refs[1] = el!)}
                     onSubmitEditing={() => refs[2]?.focus()}
+                    autoCapitalize="none"
                   />
                 )}
               />
@@ -203,10 +206,11 @@ const RegisterScreen = () => {
                     }
                     onChangeText={onChange}
                     error={errors.confirmPassword?.message}
-                    secureTextEntry={!isPressedEyeBtn}
+                    secureTextEntry={!isPressedEyeBtn.isConfirmPasswordField}
                     returnKeyType="next"
                     ref={(el) => (refs[2] = el!)}
                     onSubmitEditing={() => refs[3]?.focus()}
+                    autoCapitalize="none"
                   />
                 )}
               />
