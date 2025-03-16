@@ -45,7 +45,8 @@ const axiosInstance: AxiosInstance = axios.create({
   baseURL: envs.BACKEND_URL,
   timeout: 15000,
   headers: {
-    "Content-Type": "application/json",
+    //The Accept header tells the server what kind of response format your client can understand and prefers to receive.
+    Accept: "application/json",
   },
 });
 
@@ -134,24 +135,26 @@ axiosInstance.interceptors.response.use(
   },
   async (error: AxiosError): Promise<any> => {
     const originalRequest = error.config as InternalAxiosRequestConfig;
+    const errorData = error.response?.data as any;
 
-    // Handle token expiration
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      errorData?.errorType === "token_expired"
+    ) {
       originalRequest._retry = true;
 
-      if ((error.response.data as any).name === "JWT Token Expired") {
-        if (isRefreshing) {
-          // Wait for token refresh if it's already in progress
-          return new Promise((resolve) => {
-            addRefreshSubscriber((token: string) => {
-              originalRequest.headers["Authorization"] = `Bearer ${token}`;
-              resolve(axiosInstance(originalRequest));
-            });
+      if (isRefreshing) {
+        // Wait for token refresh if it's already in progress
+        return new Promise((resolve) => {
+          addRefreshSubscriber((token: string) => {
+            originalRequest.headers["Authorization"] = `Bearer ${token}`;
+            resolve(axiosInstance(originalRequest));
           });
-        }
-
-        return refreshToken({ originalRequest });
+        });
       }
+
+      return refreshToken({ originalRequest });
     }
 
     // Handle network errors

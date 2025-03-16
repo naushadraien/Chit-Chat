@@ -1,24 +1,23 @@
+import { authApi } from "@/api/auth";
 import { FilledButton } from "@/components/atomic/Button/FilledButton";
 import { Loader } from "@/components/atomic/Loader";
 import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
 import { InputField } from "@/components/new-atomic/Input";
-import { useAuth } from "@/providers/AuthProvider";
-import { showToast, useToast } from "@/providers/ToastProvider";
+import { useToast } from "@/providers/ToastProvider";
 import registerSchema, { RegisterFormData } from "@/schema/register.schema";
 import { COLORS, FONTFAMILIES } from "@/theme";
+import requestAPI from "@/utils/apiRequest/requestApi";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const RegisterScreen = () => {
-  // const { onLogin, isLoading } = useAuth();
-  const refs = useRef<TextInput[]>([]).current;
-
   const [isPressedEyeBtn, setIsPressedEyeBtn] = useState<{
     isPasswordField: boolean;
     isConfirmPasswordField: boolean;
@@ -26,6 +25,8 @@ const RegisterScreen = () => {
     isConfirmPasswordField: false,
     isPasswordField: false,
   });
+  const refs = useRef<TextInput[]>([]).current;
+  const { showToast } = useToast();
 
   const {
     control,
@@ -40,21 +41,23 @@ const RegisterScreen = () => {
     },
   });
 
-  useEffect(() => {
-    showToast({
-      type: "success",
-      message: "Hello",
-      duration: 3000,
-    });
-  }, [showToast]);
-  console.log("🚀 ~ RegisterScreen ~ errors:", errors);
+  const { mutate: signUp, isPending } = useMutation({
+    mutationFn: async (data: RegisterFormData) => {
+      return await requestAPI(authApi.signUp(data));
+    },
+    onSuccess: (data) => {
+      console.log("🚀 ~ RegisterScreen ~ data:", data);
+      router.replace("/login");
+      showToast({
+        type: "success",
+        message: "Registered successfully!",
+      });
+    },
+  });
 
   const onSubmit = (data: RegisterFormData) => {
-    console.log("🚀 ~ onSubmit ~ data:", data);
+    signUp(data);
   };
-
-  const { onLogin } = useAuth();
-  console.log("🚀 ~ RegisterScreen ~ onLogin:", onLogin);
 
   const handlePressEyeBtn = (
     key: keyof typeof isPressedEyeBtn,
@@ -282,7 +285,7 @@ const RegisterScreen = () => {
           </Text>
         </View>
       </KeyboardAwareScrollView>
-      <Loader loading={false} />
+      <Loader loading={isPending} />
     </SafeAreaWrapper>
   );
 };

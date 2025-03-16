@@ -1,47 +1,107 @@
 import {
   ExecutionContext,
   Injectable,
-  UnauthorizedException,
+  Logger,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { TokenExpiredError } from '@nestjs/jwt';
+import { TokenExpiredError, JsonWebTokenError } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/auth/decorators/public.decorator';
+import { Request } from 'express';
+
+export enum AuthErrorType {
+  TOKEN_EXPIRED = 'token_expired',
+  TOKEN_INVALID = 'token_invalid',
+  TOKEN_MISSING = 'token_missing',
+  UNAUTHORIZED = 'unauthorized',
+}
+
+export interface AuthErrorResponse {
+  statusCode: number;
+  errorType: AuthErrorType;
+  message: string;
+  path: string;
+  timestamp: string;
+}
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
+  private readonly logger = new Logger('Auth');
+
   constructor(private reflector: Reflector) {
     super();
   }
 
   canActivate(context: ExecutionContext) {
-    // Use the Reflector to get the metadata value for the IS_PUBLIC_KEY
-    // The Reflector helps to retrieve metadata set by decorators
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(), // Check if the handler (method) has the IS_PUBLIC_KEY metadata
-      context.getClass(), // Check if the class (controller) has the IS_PUBLIC_KEY metadata
-    ]);
-
-    // If the route is public, allow access without authentication
-    if (isPublic) {
-      return true;
-    }
-
-    // Otherwise, use the default JWT authentication guard
-    return super.canActivate(context);
+    return (
+      this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) || super.canActivate(context)
+    );
   }
 
-  handleRequest(err, user, info) {
-    // If the token has expired, throw a custom UnauthorizedException
-    if (info instanceof TokenExpiredError) {
-      throw new UnauthorizedException('Your access token has expired');
-    }
-    // If there is an error or the user is not authenticated, throw an UnauthorizedException
-    if (err || !user) {
-      throw err || new UnauthorizedException();
+  handleRequest(err, user, info, context: ExecutionContext) {
+    const path = context.switchToHttp().getRequest<Request>()?.url || 'unknown';
+
+    // Handle JWT errors using map-based approach to reduce repetition
+    const errorMap = {
+      [TokenExpiredError.name]: {
+        type: AuthErrorType.TOKEN_EXPIRED,
+        message: 'Authentication token has expired',
+      },
+      [JsonWebTokenError.name]: {
+        type: AuthErrorType.TOKEN_INVALID,
+        message: 'Invalid authentication token',
+      },
+    };
+
+    // Check for JWT-specific errors
+    if (info) {
+      const errorConfig = errorMap[info.constructor.name];
+      if (errorConfig) {
+        this.createAndThrowError(errorConfig.type, errorConfig.message, path);
+      }
     }
 
-    // If the user is authenticated, return the user object
+    // Handle general auth errors
+    if (!user) {
+      this.createAndThrowError(
+        AuthErrorType.TOKEN_MISSING,
+        'Authentication token missing or invalid',
+        path,
+      );
+    }
+
+    if (err) {
+      this.createAndThrowError(
+        AuthErrorType.UNAUTHORIZED,
+        err.message || 'Unauthorized',
+        path,
+      );
+    }
+
+    this.logger.debug(`Auth: ${user.email || user.id} → ${path}`);
     return user;
+  }
+
+  private createAndThrowError(
+    type: AuthErrorType,
+    message: string,
+    path: string,
+  ): never {
+    this.logger.warn(`${type}: ${message} (${path})`);
+
+    const response: AuthErrorResponse = {
+      statusCode: HttpStatus.UNAUTHORIZED,
+      errorType: type,
+      message,
+      path,
+      timestamp: new Date().toISOString(),
+    };
+
+    throw new HttpException(response, HttpStatus.UNAUTHORIZED);
   }
 }
