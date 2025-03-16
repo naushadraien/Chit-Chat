@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Inject,
   Post,
   Request,
@@ -11,6 +12,7 @@ import {
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Response } from 'express';
 import frontendConfig from 'src/config/frontend.config';
+import { UserData } from 'src/types/userData';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
@@ -41,16 +43,14 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard) // this is the local strategy guard which is used to authenticate the user using email and password
   @Post('signin')
+  @HttpCode(200)
   login(
     @Request()
     req: {
-      user: {
-        id: string;
-        name: string;
-      };
+      user: UserData;
     },
   ) {
-    return this.authService.login(req.user.id, req.user.name);
+    return this.authService.login(req.user);
   }
 
   @Public()
@@ -68,14 +68,19 @@ export class AuthController {
   @Public()
   @UseGuards(GoogleOAuthGuard)
   @Get('google/callback')
-  async googleCallback(@Request() req, @Res() res: Response) {
+  async googleCallback(
+    @Request()
+    req: {
+      user: UserData;
+    },
+    @Res() res: Response,
+  ) {
     console.log('🚀 ~ AuthController ~ googleCallback ~ req:', req.user);
 
-    const response = await this.authService.login(req.user.id, req.user.name);
+    const response = await this.authService.login(req.user);
     const params = new URLSearchParams();
     params.append('accessToken', response.accessToken);
     params.append('refreshToken', response.refreshToken);
-    params.append('name', response.name);
     params.append('userId', response.id.toString());
 
     console.log('url of frontend', this.frontendConfiguration.frontendURL);
@@ -117,6 +122,7 @@ export class AuthController {
   }
 
   @Post('verify-otp')
+  @HttpCode(200) //for sending the status code of 200 instead of 201
   async verifyOtp(
     @Body() data: VerifyOtpDto,
     @Request()

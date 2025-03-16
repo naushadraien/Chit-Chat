@@ -25,7 +25,7 @@ export class UserService {
     return await this.userModel
       .findById(createdUser._id)
       .select(
-        '-password -hashedRefreshToken -otp -otpExpiresAt -isPhoneVerified',
+        '-password -hashedRefreshToken -otp -otpExpiresAt -verificationStatus -phoneNumber -avatar -firstName -lastName',
       )
       .lean()
       .exec();
@@ -60,12 +60,9 @@ export class UserService {
 
   async updateUserOtp(
     userId: string,
-    data: Partial<{
-      phoneNumber: string;
-      otp: string;
-      otpExpiresAt: Date;
-      isPhoneVerified: boolean;
-    }>,
+    data: Partial<
+      Pick<User, 'phoneNumber' | 'otp' | 'otpExpiresAt' | 'verificationStatus'>
+    >,
   ) {
     const resultWithExec = await this.userModel
       .findByIdAndUpdate(userId, { ...data }, { new: true })

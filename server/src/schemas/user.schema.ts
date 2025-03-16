@@ -3,8 +3,40 @@ import { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
+export interface VerificationStatus {
+  isPhoneVerified: boolean;
+  isNameProvided?: boolean;
+}
+
 @Schema({
   timestamps: true,
+  //transformation below is for sending the sufficient data in the response of api request from frontend
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      delete ret.otp;
+      delete ret.otpExpiresAt;
+      delete ret.password;
+      delete ret.hashedRefreshToken;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      delete ret.otp;
+      delete ret.otpExpiresAt;
+      delete ret.password;
+      delete ret.hashedRefreshToken;
+      return ret;
+    },
+  },
 })
 export class User {
   @Prop({ default: null })
@@ -26,10 +58,10 @@ export class User {
   avatar: string;
 
   @Prop({
-    required: true,
+    default: null,
     validate: {
       validator: function (v: string) {
-        return /^\+[1-9]\d{1,14}$/.test(v);
+        return v === null || /^\+[1-9]\d{1,14}$/.test(v);
       },
       message: (props: { value: string }) =>
         `${props.value} is not a valid phone number!`,
@@ -43,8 +75,14 @@ export class User {
   @Prop({ default: null })
   otpExpiresAt: Date;
 
-  @Prop({ default: false })
-  isPhoneVerified: boolean;
+  @Prop({
+    type: Object,
+    default: {
+      isPhoneVerified: false,
+      isNameProvided: false,
+    },
+  })
+  verificationStatus: VerificationStatus;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -10,13 +10,14 @@ import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import refreshConfig from 'src/config/refresh.config';
+import { EmailService } from 'src/email/email.service';
+import { UserData } from 'src/types/userData';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
-import { AuthJWTPayload } from './types/auth.jwtPayload';
+import { GenerateOTP } from 'src/utils/generate-otp.utils';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { GenerateOTP } from 'src/utils/generate-otp.utils';
-import { EmailService } from 'src/email/email.service';
+import { AuthJWTPayload } from './types/auth.jwtPayload';
 
 @Injectable()
 export class AuthService {
@@ -34,25 +35,26 @@ export class AuthService {
     return await this.userService.create(createUserDto);
   }
 
-  async validateUser(email: string, password: string) {
+  async validateUser(email: string, password: string): Promise<UserData> {
     const user = await this.userService.findByEmail(email);
     if (!user) throw new UnauthorizedException('Invalid Credentials!');
     const isPasswordMatched = await bcrypt.compare(password, user.password);
     if (!isPasswordMatched)
       throw new UnauthorizedException('Invalid Credentials!');
 
-    return { id: user.id, firstName: user.firstName, lastName: user.lastName };
+    return user.toObject() as UserData;
   }
 
-  async login(userId: string, name?: string) {
+  async login(user: UserData) {
+    const { id: userId, ...rest } = user;
     const { accessToken, refreshToken } = await this.generateTokens(userId);
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     await this.userService.updateHashedRefreshToken(userId, hashedRefreshToken);
     return {
       id: userId,
-      name,
       accessToken,
       refreshToken,
+      ...rest,
     };
   }
 
@@ -125,7 +127,6 @@ export class AuthService {
       phoneNumber: data.phoneNumber,
       otp,
       otpExpiresAt,
-      isPhoneVerified: false,
     });
 
     await this.emailService.sendVerificationCode(req.user.email, otp);
@@ -161,7 +162,9 @@ export class AuthService {
 
     // Mark phone as verified
     const updatedUser = await this.userService.updateUserOtp(req.user.id, {
-      isPhoneVerified: true,
+      verificationStatus: {
+        isPhoneVerified: true,
+      },
       otp: null,
       otpExpiresAt: null,
     });
