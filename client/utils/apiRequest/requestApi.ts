@@ -142,7 +142,7 @@ function handleApiError(
   // Show toast unless silent mode is enabled
   if (!config.silent) {
     showToast({
-      message: errorMessage,
+      text1: errorMessage,
       type: "error",
     });
   }
