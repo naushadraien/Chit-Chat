@@ -75,10 +75,12 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     position: "top",
   });
 
+  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Add position to the showToast function
   const showToast = ({
     text1 = "",
     text2 = "",
@@ -86,10 +88,13 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     duration = 3000,
     position = "top",
   }: ToastProps) => {
+    // Clear existing timeout
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
+    // Update state with single setter
     setToast({ visible: true, text1, text2, type, duration, position });
 
+    // Reset and start animations
     progressAnim.setValue(0);
     fadeAnim.setValue(0);
 
@@ -105,6 +110,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       useNativeDriver: false,
     }).start();
 
+    // Set timeout to hide toast
     timeoutRef.current = setTimeout(hideToast, duration);
   };
 
@@ -121,6 +127,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Store methods in ref for external access
   React.useEffect(() => {
     toastRef = { showToast, hideToast };
     return () => {
@@ -128,6 +135,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
+  // Get icon based on toast type
   const getIcon = () => {
     const iconProps = { size: 24, color: "#fff" };
     switch (toast.type) {
@@ -142,6 +150,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Get background color based on toast type
   const getBackgroundColor = () => {
     switch (toast.type) {
       case "success":
@@ -155,6 +164,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Get position styles based on position prop
   const getPositionStyle = () => {
     // Get status bar height to avoid notch on iOS devices
     const statusBarHeight = StatusBar.currentHeight || 0;
