@@ -47,6 +47,7 @@ const RegisterScreen = () => {
       return await requestAPI(authApi.signUp(data));
     },
     onSuccess: (data) => {
+      console.log("🚀 ~ RegisterScreen ~ data:", data);
       router.replace("/login");
       showToast({
         type: "success",
