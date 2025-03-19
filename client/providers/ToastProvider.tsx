@@ -1,16 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useRef, useState } from "react";
-import {
-  Animated,
-  StyleSheet,
-  Text,
-  View,
-  StatusBar,
-  Platform,
-  Modal,
-  TouchableOpacity,
-} from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
+import { TouchableOpacity } from "react-native";
 import {
   CheckCircle,
   AlertCircle,
@@ -22,6 +14,7 @@ import {
 type ToastType = "success" | "error" | "info" | "warning";
 type ToastPosition = "top" | "bottom";
 
+// Add position to the props interface
 interface ToastProps {
   text1?: string;
   text2?: string;
@@ -66,6 +59,7 @@ export const hideToast = () => {
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  // Add position to the state
   const [toast, setToast] = useState<ToastData>({
     visible: false,
     text1: "",
@@ -166,85 +160,71 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Get position styles based on position prop
   const getPositionStyle = () => {
-    // Get status bar height to avoid notch on iOS devices
-    const statusBarHeight = StatusBar.currentHeight || 0;
-    const topPadding = Platform.OS === "ios" ? 50 : statusBarHeight + 20;
-
     return toast.position === "top"
-      ? { top: topPadding, bottom: undefined }
+      ? { top: 50, bottom: undefined }
       : { top: undefined, bottom: 50 };
   };
+
+  if (!toast.visible)
+    return (
+      <ToastContext.Provider value={{ showToast, hideToast }}>
+        {children}
+      </ToastContext.Provider>
+    );
 
   return (
     <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
-
-      {/* Use React Native's built-in Modal component */}
-      <Modal
-        visible={toast.visible}
-        transparent={true}
-        animationType="none"
-        statusBarTranslucent={true}
-        onRequestClose={hideToast}
+      <Animated.View
+        style={[
+          styles.container,
+          getPositionStyle(),
+          { opacity: fadeAnim, backgroundColor: getBackgroundColor() },
+        ]}
       >
-        <View style={styles.modalContainer}>
-          <Animated.View
-            style={[
-              styles.container,
-              getPositionStyle(),
-              { opacity: fadeAnim, backgroundColor: getBackgroundColor() },
-            ]}
-          >
-            <View style={styles.content}>
-              <View style={styles.iconContainer}>{getIcon()}</View>
-              <View style={styles.textContainer}>
-                {toast.text1 ? (
-                  <Text style={styles.title}>{toast.text1}</Text>
-                ) : null}
-                {toast.text2 ? (
-                  <Text style={styles.message}>{toast.text2}</Text>
-                ) : null}
-              </View>
-              <TouchableOpacity onPress={hideToast} style={styles.closeButton}>
-                <X size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            <Animated.View
-              style={[
-                styles.progressBar,
-                {
-                  width: progressAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ["100%", "0%"],
-                  }),
-                },
-              ]}
-            />
-          </Animated.View>
+        <View style={styles.content}>
+          <View style={styles.iconContainer}>{getIcon()}</View>
+          <View style={styles.textContainer}>
+            {toast.text1 ? (
+              <Text style={styles.title}>{toast.text1}</Text>
+            ) : null}
+            {toast.text2 ? (
+              <Text style={styles.message}>{toast.text2}</Text>
+            ) : null}
+          </View>
+          <TouchableOpacity onPress={hideToast} style={styles.closeButton}>
+            <X size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </Modal>
+        <Animated.View
+          style={[
+            styles.progressBar,
+            {
+              width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["100%", "0%"],
+              }),
+            },
+          ]}
+        />
+      </Animated.View>
     </ToastContext.Provider>
   );
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    // This wrapper ensures proper stacking context
-    flex: 1,
-    backgroundColor: "transparent",
-    pointerEvents: "box-none", // Allows touches to pass through to elements below
-  },
   container: {
     position: "absolute",
     left: 20,
     right: 20,
     padding: 16,
     borderRadius: 8,
-    elevation: 20,
+    elevation: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 9999,
     overflow: "hidden",
   },
   content: {

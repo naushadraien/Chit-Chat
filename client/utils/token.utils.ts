@@ -52,7 +52,7 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
   try {
     const tokens = await getTokensFromAsyncStorage();
     if (!tokens?.refreshToken) {
-      showToast({ type: "error", message: "No refresh token available" });
+      showToast({ type: "error", text1: "No refresh token available" });
       throw new Error("No refresh token available");
     }
 
@@ -67,13 +67,13 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
       await setTokensToAsyncStorage({ ...tokens, accessToken, refreshToken });
       return accessToken;
     } else {
-      showToast({ type: "error", message: "Failed to refresh access token" });
+      showToast({ type: "error", text1: "Failed to refresh access token" });
       throw new Error("Failed to refresh access token");
     }
   } catch (error) {
     showToast({
       type: "error",
-      message: "Refresh token is invalid. Logging out...",
+      text1: "Refresh token is invalid. Logging out...",
     });
     await clearTokensFromAsyncStorage();
     await clearUserDetails();
