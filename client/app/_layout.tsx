@@ -1,8 +1,3 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -10,17 +5,15 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
-import TanstackQueryProvider from "@/providers/TanstackQueryProvider";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "@/providers/AuthProvider";
+import TanstackQueryProvider from "@/providers/TanstackQueryProvider";
 import { ToastProvider } from "@/providers/ToastProvider";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     "Mulish-Light": require("../assets/fonts/Mulish-Light.ttf"),
     "Mulish-Regular": require("../assets/fonts/Mulish-Regular.ttf"),
@@ -43,17 +36,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <SafeAreaProvider>
+    <SafeAreaProvider>
+      <TanstackQueryProvider>
         <ToastProvider>
           <AuthProvider>
-            <TanstackQueryProvider>
-              <StatusBar style="auto" />
-              <Slot />
-            </TanstackQueryProvider>
+            <StatusBar style="auto" />
+            <Slot />
           </AuthProvider>
         </ToastProvider>
-      </SafeAreaProvider>
-    </ThemeProvider>
+      </TanstackQueryProvider>
+    </SafeAreaProvider>
   );
 }

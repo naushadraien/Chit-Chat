@@ -1,3 +1,5 @@
+import { UseMutateFunction } from "@tanstack/react-query";
+
 export type UserDetails = {
   firstName?: string;
   lastName?: string;
@@ -8,7 +10,15 @@ export type UserDetails = {
 };
 
 export type AuthProviderContext = {
-  onLogin: () => void;
+  onLogin: UseMutateFunction<
+    void,
+    Error,
+    {
+      email: string;
+      password: string;
+    },
+    unknown
+  >;
   authState: { authenticated: boolean | null; token: string | null };
   onLogout: () => Promise<void>;
   isLoading: boolean;

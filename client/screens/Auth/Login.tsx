@@ -4,6 +4,7 @@ import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
 import { InputField } from "@/components/new-atomic/Input";
+import { useAuth } from "@/providers/AuthProvider";
 import loginSchema, { LoginFormData } from "@/schema/login.schema";
 import { COLORS, FONTFAMILIES } from "@/theme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +15,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const LoginScreen = () => {
-  // const { onLogin, isLoading } = useAuth();
+  const { onLogin, isLoading } = useAuth();
   const refs = useRef<TextInput[]>([]).current;
 
   const [isPressedEyeBtn, setIsPressedEyeBtn] = useState(false);
@@ -30,10 +31,12 @@ const LoginScreen = () => {
       password: "",
     },
   });
-  console.log("🚀 ~ Login ~ errors:", errors);
 
   const onSubmit = (data: LoginFormData) => {
-    console.log("🚀 ~ onSubmit ~ data:", data);
+    onLogin({
+      email: data.email,
+      password: data.password,
+    });
   };
 
   const handlePressEyeBtn = () => {
@@ -223,7 +226,7 @@ const LoginScreen = () => {
           </Text>
         </View>
       </KeyboardAwareScrollView>
-      <Loader loading={false} />
+      <Loader loading={isLoading} />
     </SafeAreaWrapper>
   );
 };
