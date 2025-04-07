@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     authState,
     isLoading,
     onLogout: async () => {},
-    onRegister: () => {},
   };
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };

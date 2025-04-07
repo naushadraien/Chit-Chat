@@ -12,11 +12,4 @@ export type AuthProviderContext = {
   authState: { authenticated: boolean | null; token: string | null };
   onLogout: () => Promise<void>;
   isLoading: boolean;
-  onRegister: ({
-    email,
-    password,
-  }: {
-    email: string;
-    password: string;
-  }) => void;
 };
