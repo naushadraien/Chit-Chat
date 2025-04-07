@@ -97,6 +97,7 @@ const LoginScreen = () => {
                     value={value}
                     label="Email"
                     placeholder="Email"
+                    autoCapitalize="none"
                     autoFocus
                     rightIcon={
                       <SvgIcon name="email-icon" size={22} fill={"GREY500"} />
@@ -118,6 +119,7 @@ const LoginScreen = () => {
                     value={value}
                     label="Password"
                     placeholder="Password"
+                    autoCapitalize="none"
                     rightIcon={
                       <Pressable onPress={handlePressEyeBtn}>
                         <SvgIcon

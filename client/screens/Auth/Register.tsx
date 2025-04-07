@@ -18,7 +18,6 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const RegisterScreen = () => {
-  console.log("RegisterScreen rendering");
   const [isPressedEyeBtn, setIsPressedEyeBtn] = useState<{
     isPasswordField: boolean;
     isConfirmPasswordField: boolean;
@@ -47,7 +46,6 @@ const RegisterScreen = () => {
       return await requestAPI(authApi.signUp(data));
     },
     onSuccess: (data) => {
-      console.log("🚀 ~ RegisterScreen ~ data:", data);
       router.replace("/login");
       showToast({
         type: "success",

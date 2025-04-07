@@ -82,7 +82,7 @@ export const refreshToken = async ({
     // Handle refresh failure
     showToast({
       type: "error",
-      message: "Session expired. Please log in again.",
+      text1: "Session expired. Please log in again.",
     });
 
     // Reset state
@@ -161,7 +161,7 @@ axiosInstance.interceptors.response.use(
     if (error.message === "Network Error") {
       showToast({
         type: "error",
-        message: "No internet connection. Please check your network.",
+        text1: "No internet connection. Please check your network.",
       });
     }
 
