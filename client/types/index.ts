@@ -1,17 +1,29 @@
 import { UseMutateFunction } from "@tanstack/react-query";
 
-export type UserDetails = {
-  firstName?: string;
-  lastName?: string;
-  _id: string;
-  email: string;
-  avatar?: string;
-  phoneNumber?: string;
+type VerificationStatus = {
+  isNameProvided: boolean;
+  isPhoneVerified: boolean;
 };
+
+export type LoginResponse = {
+  accessToken: string;
+  avatar: string | null;
+  createdAt: string;
+  email: string;
+  firstName: string | null;
+  id: string;
+  lastName: string | null;
+  phoneNumber: string | null;
+  refreshToken: string;
+  updatedAt: string;
+  verificationStatus: VerificationStatus;
+};
+
+export type UserDetails = Omit<LoginResponse, "accessToken" | "refreshToken">;
 
 export type AuthProviderContext = {
   onLogin: UseMutateFunction<
-    void,
+    LoginResponse,
     Error,
     {
       email: string;

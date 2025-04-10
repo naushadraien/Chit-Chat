@@ -115,17 +115,23 @@ function handleApiError(
     else {
       errorCode = error.response.status;
 
-      // Skip 401 errors as they're handled by axios interceptors
-      if (errorCode === 401) {
-        throw error;
-      }
-
       // Extract error message from response
       errorMessage =
         (error.response.data as any)?.message ||
         (error.response.data as any)?.error ||
         error.message ||
         `HTTP Error ${errorCode}`;
+
+      // Skip 401 errors as they're handled by axios interceptors
+      if (errorCode === 401) {
+        if (!config.silent) {
+          showToast({
+            text1: errorMessage,
+            type: "error",
+          });
+        }
+        throw error;
+      }
 
       // Classify by status code
       if (errorCode >= 500) {

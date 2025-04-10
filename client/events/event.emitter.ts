@@ -2,8 +2,7 @@ import { EventEmitter } from "expo-modules-core";
 
 type StorageEvents = {
   storageUpdate: {
-    key: string;
-    value: string | null;
+    token: string;
   };
   tokenRefresh: {
     success: boolean;

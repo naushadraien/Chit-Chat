@@ -18,9 +18,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     if (!password)
       throw new UnauthorizedException('Please provide your password');
     const user = await this.authService.validateUser(email, password);
-    if (!user) {
-      throw new UnauthorizedException();
-    }
     return user; //this returned user object will be attached to the request object so that you can access it in the protected routes by using like   async login(@Request() req) {return req.user;}
   }
 }

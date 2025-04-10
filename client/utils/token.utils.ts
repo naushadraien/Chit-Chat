@@ -24,8 +24,7 @@ export const setTokensToAsyncStorage = async (tokens: {
 
   // Notify app about token update
   storageEventEmitter.emit("storageUpdate", {
-    key: "accessToken",
-    value: tokens.accessToken,
+    token: tokens.accessToken,
   });
 };
 
