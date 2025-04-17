@@ -13,7 +13,7 @@ export default function StartupScreen() {
   const setStartupCompleteToAsyncStorage = async () => {
     try {
       await AsyncStorage.setItem(STARTUP_COMPLETED, "completed");
-      router.replace("/login");
+      router.replace("/(app)");
     } catch (error) {
       console.error(
         "Error while setting startup status to async storage",

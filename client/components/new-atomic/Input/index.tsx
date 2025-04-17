@@ -89,7 +89,6 @@ export const InputField = forwardRef<TextInput, InputProps>(
 const styles = StyleSheet.create({
   container: {
     gap: 6,
-    flex: 1,
   },
   inputContainer: {
     flexDirection: "row",

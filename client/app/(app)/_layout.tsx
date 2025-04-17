@@ -1,58 +1,94 @@
 import { LoadingSpinner } from "@/components/atomic/Loader/LoadingSpinner";
 import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { useCheckStartupCompletion } from "@/hooks/useCheckStartupCompletion";
+import { useAuth } from "@/providers/AuthProvider";
 import { Redirect, Stack } from "expo-router";
+import { useEffect } from "react";
 import "react-native-reanimated";
 
-const StackLayout = () => {
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-    </Stack>
-  );
-};
+/**
+ * Main stack navigator for the authenticated app experience
+ */
+const AppNavigator = () => (
+  <Stack
+    screenOptions={{
+      headerShown: false,
+      animation: "fade",
+      contentStyle: { backgroundColor: "#FFFFFF" },
+    }}
+  >
+    <Stack.Screen name="index" />
+    <Stack.Screen name="(tabs)" />
+    {/* Add other main app screens here */}
+  </Stack>
+);
 
+/**
+ * Loading screen component to maintain consistent loading UI
+ */
+const LoadingScreen = () => (
+  <SafeAreaWrapper style={{ alignItems: "center", justifyContent: "center" }}>
+    <LoadingSpinner />
+  </SafeAreaWrapper>
+);
+
+/**
+ * Root layout component that manages authentication state
+ * and routes to appropriate screens based on user state
+ */
 export default function RootLayout() {
-  // const { isLoading, authState } = useAuth();
-  const isLoading = false;
-  const authState = {
-    authenticated: false,
-  };
+  const { isLoading, authState } = useAuth();
+  const { loading: startupLoading, isComplete: startupComplete } =
+    useCheckStartupCompletion();
 
-  // First check if app is loading auth state
-  if (isLoading) {
-    return (
-      <SafeAreaWrapper
-        style={{ alignItems: "center", justifyContent: "center" }}
-      >
-        <LoadingSpinner />
-      </SafeAreaWrapper>
-    );
+  // Handle initial loading state
+  if (isLoading || startupLoading) {
+    return <LoadingScreen />;
   }
 
-  // If not authenticated, redirect to login
+  if (!startupComplete) {
+    return <Redirect href="/start-up" />;
+  }
+
+  // Handle unauthenticated users
   if (!authState.authenticated) {
     return <Redirect href="/login" />;
   }
 
-  // If authenticated, check startup completion
-  return <CheckStartup />;
+  // For authenticated users, proceed to verification and startup checks
+  return <VerificationFlow />;
 }
 
-function CheckStartup() {
-  const { loading, isComplete } = useCheckStartupCompletion();
+/**
+ * Component that handles the verification flow for authenticated users
+ * Checks user verification status before allowing access to main app
+ */
+function VerificationFlow() {
+  const { userDetails, isLoading } = useAuth();
 
-  if (!loading && !isComplete) {
-    return <Redirect href="/start-up" />;
+  // Handle startup loading state
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
-  if (!loading && isComplete) {
-    return <StackLayout />;
+  // Ensure we have user details before proceeding
+  if (!userDetails) {
+    console.warn(
+      "Authentication anomaly: User is authenticated but details are missing"
+    );
+    return <Redirect href="/login" />;
   }
 
-  return (
-    <SafeAreaWrapper style={{ alignItems: "center", justifyContent: "center" }}>
-      <LoadingSpinner />
-    </SafeAreaWrapper>
-  );
+  // Check phone verification first (security)
+  if (!userDetails.verificationStatus?.isPhoneVerified) {
+    return <Redirect href="/verify-phone" />;
+  }
+
+  // Check profile completion (user experience)
+  if (!userDetails.verificationStatus?.isNameProvided) {
+    return <Redirect href="/complete-profile" />;
+  }
+
+  // All checks passed - proceed to main app
+  return <AppNavigator />;
 }

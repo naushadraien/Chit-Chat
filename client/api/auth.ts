@@ -18,4 +18,11 @@ export const authApi = {
       url: "/auth/signup",
     };
   },
+  refreshAccessToken: (data: { refreshToken: string }): ApiRequestConfig => {
+    return {
+      method: "post",
+      data,
+      url: "/auth/refresh-token`",
+    };
+  },
 };

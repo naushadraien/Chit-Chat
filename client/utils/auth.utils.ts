@@ -1,5 +1,5 @@
 import { UserDetails } from "@/types";
-import { ACCESS_TOKEN_KEY, USER_KEY } from "../constants/AsyncStorage";
+import { USER_KEY } from "../constants/AsyncStorage";
 import { safeAsyncStorage } from "./storage.utils";
 
 export const setUsersToAsyncStorage = async (user: UserDetails) => {
@@ -13,10 +13,7 @@ export const setUsersToAsyncStorage = async (user: UserDetails) => {
 };
 
 export const clearUserDetails = async () => {
-  await Promise.all([
-    safeAsyncStorage.removeItem(ACCESS_TOKEN_KEY),
-    safeAsyncStorage.removeItem(USER_KEY),
-  ]);
+  await safeAsyncStorage.removeItem(USER_KEY);
 };
 
 export const getUserDetailsFromAsyncStorage =
