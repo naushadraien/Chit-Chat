@@ -25,4 +25,18 @@ export const authApi = {
       url: "/auth/refresh-token`",
     };
   },
+  sendOtp: (data: { phoneNumber: string }): ApiRequestConfig => {
+    return {
+      method: "post",
+      data,
+      url: "/auth/send-otp",
+    };
+  },
+  verifyOtp: (data: { otp: string }): ApiRequestConfig => {
+    return {
+      method: "post",
+      data,
+      url: "/auth/verify-otp",
+    };
+  },
 };

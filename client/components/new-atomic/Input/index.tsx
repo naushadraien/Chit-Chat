@@ -1,7 +1,6 @@
 import { Typography } from "@/components/atomic/Typography";
 import { COLORS, FONTFAMILIES, FONTSIZES, LINEHEIGHTS } from "@/theme";
-import { Ionicons } from "@expo/vector-icons";
-import React, { forwardRef, useState } from "react";
+import React, { forwardRef } from "react";
 import {
   StyleProp,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import ErrorComponent from "../ErrorComponent";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -33,7 +33,7 @@ export const InputField = forwardRef<TextInput, InputProps>(
             fontFamily="MULISH_SEMIBOLD"
             fontSize="MD"
             color={error ? "REDFF7875" : "GREY700"}
-            style={labelStyle}
+            style={[styles.label, labelStyle]}
           >
             {label}
           </Typography>
@@ -42,45 +42,34 @@ export const InputField = forwardRef<TextInput, InputProps>(
           style={[
             styles.inputContainer,
             {
-              borderColor: COLORS.GREY200,
+              borderColor: error ? COLORS.REDFF4D4F : COLORS.GREY200,
+              borderWidth: 1,
             },
             inputRestProps.inputViewStyle,
           ]}
         >
-          {leftIcon && leftIcon}
+          {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
           <TextInput
             ref={ref}
             placeholderTextColor={COLORS.GREYADB5BD}
-            selectionColor={COLORS.GREYADB5BD}
+            selectionColor={"rgba(59, 130, 246, 0.25)"}
+            cursorColor={"#3B82F6"}
             style={[
               styles.input,
               {
                 color: error ? COLORS.REDFF4D4F : COLORS.INPUTTEXTCOLOR,
+                paddingLeft: leftIcon ? 0 : 12,
+                paddingRight: rightIcon ? 0 : 12,
               },
-              ,
               inputStyle,
             ]}
             {...inputRestProps}
           />
-          {React.isValidElement(rightIcon) && rightIcon}
+          {React.isValidElement(rightIcon) && (
+            <View style={styles.iconContainer}>{rightIcon}</View>
+          )}
         </View>
-        {error && (
-          <View style={styles.errorContainer}>
-            <View style={styles.errorIconContainer}>
-              <Ionicons name="alert" size={15} color={COLORS.REDFF4D4F} />
-            </View>
-            <Typography
-              fontFamily="MULISH_SEMIBOLD"
-              fontSize="MD"
-              color="REDFF4D4F"
-              style={{
-                flex: 1,
-              }}
-            >
-              {error}
-            </Typography>
-          </View>
-        )}
+        {error && <ErrorComponent error={error} />}
       </View>
     );
   }
@@ -88,38 +77,32 @@ export const InputField = forwardRef<TextInput, InputProps>(
 
 const styles = StyleSheet.create({
   container: {
-    gap: 6,
+    marginBottom: 16,
+    width: "100%",
+  },
+  label: {
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    // paddingVertical: 6,
+    borderRadius: 8,
     backgroundColor: COLORS.GREYF7F7FC,
+    overflow: "hidden",
+    height: 48,
   },
   input: {
-    // marginTop: 4,
     fontSize: FONTSIZES.MD,
     flex: 1,
-    paddingVertical: 6,
-    height: 36,
+    height: "100%",
     textAlign: "left",
-    fontFamily: FONTFAMILIES.MULISH_SEMIBOLD,
+    fontFamily: FONTFAMILIES.MULISH_REGULAR,
     lineHeight: LINEHEIGHTS.MD,
   },
-  errorContainer: {
-    flexDirection: "row",
-    gap: 4,
-    alignItems: "center",
-    marginTop: 6,
-  },
-  errorIconContainer: {
+  iconContainer: {
+    paddingHorizontal: 12,
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    borderRadius: 100,
-    borderColor: COLORS.REDFFA39E,
   },
 });

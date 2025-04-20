@@ -377,7 +377,7 @@ export const irelandCounties = [
   { label: "Wicklow", value: "Wicklow" },
 ];
 
-type CountryType = {
+export type CountryType = {
   name: string;
   dial_code: string;
   code: string;
