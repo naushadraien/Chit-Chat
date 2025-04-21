@@ -7,6 +7,7 @@ import { CodeInput } from "@/components/new-atomic/CodeInput";
 import CustomCountryPicker from "@/components/new-atomic/CustomCountryPicker";
 import FullScreenModal from "@/components/new-atomic/Modal/FullScreenModal";
 import { WithBackBTN } from "@/Layout/Header/WithBackBTN";
+import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/providers/ToastProvider";
 import {
   PhoneDataType,
@@ -48,6 +49,7 @@ export default function VerifyPhone() {
   });
 
   const { showToast } = useToast();
+  const { updateUserDetails } = useAuth();
 
   const countryCode = watch("countryCode");
 
@@ -58,7 +60,10 @@ export default function VerifyPhone() {
       );
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await updateUserDetails?.({
+        phoneNumber: data?.phoneNumber || "",
+      });
       setCodeSentRes(data);
       showToast({
         type: "success",
@@ -72,17 +77,18 @@ export default function VerifyPhone() {
       const response = await requestAPI(authApi.verifyOtp(data));
       return response;
     },
-    onSuccess: (data) => {
-      console.log("🚀 ~ VerifyPhone ~ data:", data);
+    onSuccess: async (data) => {
+      await updateUserDetails?.({
+        verificationStatus: {
+          isPhoneVerified: data.verificationStatus.isPhoneVerified,
+        },
+      });
       showToast({
         type: "success",
         text1: "Success",
         text2: "Otp verified successfully",
       });
-      router.replace("/complete-profile");
-    },
-    onError: (error) => {
-      console.log("Error while verifying code", error);
+      router.replace("/(app)");
     },
   });
 
@@ -191,8 +197,7 @@ function VerifyCodeComp({
     },
   });
 
-  // Timer state (start at 60 seconds - one minute)
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [canResend, setCanResend] = useState(false);
 
   const handleResend = () => {
@@ -202,21 +207,21 @@ function VerifyCodeComp({
   };
 
   // Timer effect
-  // useEffect(() => {
-  //   // Skip if timer has finished
-  //   if (timeLeft <= 0) {
-  //     setCanResend(true);
-  //     return;
-  //   }
+  useEffect(() => {
+    // Skip if timer has finished
+    if (timeLeft <= 0) {
+      setCanResend(true);
+      return;
+    }
 
-  //   // Set up the interval
-  //   const timerInterval = setInterval(() => {
-  //     setTimeLeft((prevTime) => prevTime - 1);
-  //   }, 1000);
+    // Set up the interval
+    const timerInterval = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
 
-  //   // Clean up on unmount or when timeLeft changes
-  //   return () => clearInterval(timerInterval);
-  // }, [timeLeft]);
+    // Clean up on unmount or when timeLeft changes
+    return () => clearInterval(timerInterval);
+  }, [timeLeft]);
 
   // Format seconds as "00:59" format
   const formatTime = (seconds: number) => {

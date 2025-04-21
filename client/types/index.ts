@@ -1,8 +1,8 @@
 import { UseMutateFunction } from "@tanstack/react-query";
 
 type VerificationStatus = {
-  isNameProvided: boolean;
-  isPhoneVerified: boolean;
+  isNameProvided?: boolean;
+  isPhoneVerified?: boolean;
 };
 
 export type LoginResponse = {
@@ -36,4 +36,5 @@ export type AuthProviderContext = {
   isLoading: boolean;
   userDetails: UserDetails | null;
   refreshToken: () => Promise<string>;
+  updateUserDetails?: (userData: Partial<UserDetails>) => Promise<void>;
 };

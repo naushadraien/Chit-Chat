@@ -1,5 +1,19 @@
+import { authApi } from "@/api/auth";
+import { storageEventEmitter } from "@/events/event.emitter";
 import { AuthProviderContext, LoginResponse, UserDetails } from "@/types";
+import requestAPI from "@/utils/apiRequest/requestApi";
+import {
+  clearUserDetails,
+  getUserDetailsFromAsyncStorage,
+  setUsersToAsyncStorage,
+} from "@/utils/auth.utils";
+import {
+  clearTokensFromAsyncStorage,
+  getTokensFromAsyncStorage,
+  setTokensToAsyncStorage,
+} from "@/utils/token.utils";
 import { useMutation } from "@tanstack/react-query";
+import { router } from "expo-router";
 import {
   createContext,
   PropsWithChildren,
@@ -10,21 +24,6 @@ import {
   useState,
 } from "react";
 import { useToast } from "./ToastProvider";
-import requestAPI from "@/utils/apiRequest/requestApi";
-import { authApi } from "@/api/auth";
-import {
-  getTokensFromAsyncStorage,
-  setTokensToAsyncStorage,
-  clearTokensFromAsyncStorage,
-} from "@/utils/token.utils";
-import {
-  getUserDetailsFromAsyncStorage,
-  setUsersToAsyncStorage,
-  clearUserDetails,
-} from "@/utils/auth.utils";
-import { storageEventEmitter } from "@/events/event.emitter";
-import { Platform } from "react-native";
-import { router } from "expo-router";
 
 const AuthContext = createContext<AuthProviderContext | undefined>(undefined);
 
@@ -151,6 +150,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       console.error("Error scheduling token refresh:", error);
     }
   }, []);
+
+  const handleUpdateUserDetails = async (userData: UserDetails) => {
+    try {
+      const userDataObj = {
+        ...userDetails,
+        ...userData,
+      };
+
+      await setUsersToAsyncStorage(userDataObj);
+      setUserDetails(userDataObj);
+    } catch (error) {
+      console.log("Error while updating user data", error);
+    }
+  };
 
   /**
    * Refresh the access token using the refresh token
@@ -306,6 +319,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     onLogout: handleLogout,
     userDetails,
     refreshToken, // Expose refreshToken for manual refresh if needed
+    updateUserDetails: handleUpdateUserDetails,
   };
 
   return (
