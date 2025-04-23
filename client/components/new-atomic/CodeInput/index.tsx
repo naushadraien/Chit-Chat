@@ -1,5 +1,5 @@
 import { COLORS, FONTSIZES } from "@/theme";
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import ErrorComponent from "../ErrorComponent";
+import * as Haptics from "expo-haptics";
 
 const screenWidth = Dimensions.get("window").width;
 const inputWidth = Math.min(60, screenWidth / 8);
@@ -23,7 +24,7 @@ interface CodeInputProps {
   onSubmit?: () => void;
 }
 
-export const CodeInput = ({
+const CodeInput = ({
   handleCodeInput,
   inputCount,
   autofocus = true,
@@ -33,6 +34,8 @@ export const CodeInput = ({
 }: CodeInputProps) => {
   const [code, setCode] = useState<Array<string>>(Array(inputCount).fill(""));
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const animatedValues = useRef<Animated.Value[]>(
     Array(inputCount)
@@ -60,14 +63,22 @@ export const CodeInput = ({
     });
   }, [focusedIndex]);
 
+  useEffect(() => {
+    setHasSubmitted(false);
+  }, [code.join("")]);
+
   // Check if code is complete and submit
   useEffect(() => {
     const isComplete = code.every((digit) => digit !== "");
-    if (isComplete && code.length === inputCount) {
+    if (isComplete && code.length === inputCount && !hasSubmitted) {
       Keyboard.dismiss();
-      onSubmit?.();
+      setHasSubmitted(true); // Set flag to prevent multiple submissions
+      setTimeout(() => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onSubmit?.();
+      }, 300);
     }
-  }, [code, inputCount, onSubmit]);
+  }, [code, inputCount, onSubmit, hasSubmitted]);
 
   const handleTextChange = (index: number, text: string) => {
     // Remove non-digit characters
@@ -177,6 +188,8 @@ export const CodeInput = ({
     </View>
   );
 };
+
+export default memo(CodeInput);
 
 const styles = StyleSheet.create({
   container: {

@@ -4,6 +4,7 @@ import { COLORS, SPACINGS } from "@/theme";
 import { Typography } from "@/components/atomic/Typography";
 import { useCustomSafeInsets } from "@/hooks/useCustomSafeInsets";
 import { WithBackBTN } from "@/Layout/Header/WithBackBTN";
+import { ModalToastRenderer } from "../ModalToastRenderer";
 
 type Props = {
   visible: boolean;
@@ -50,6 +51,7 @@ export default function FullScreenModal({
           {children}
         </View>
       </View>
+      <ModalToastRenderer />
     </Modal>
   );
 }

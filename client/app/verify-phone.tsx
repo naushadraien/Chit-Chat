@@ -3,9 +3,10 @@ import { FilledButton } from "@/components/atomic/Button/FilledButton";
 import { Loader } from "@/components/atomic/Loader";
 import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { Typography } from "@/components/atomic/Typography";
-import { CodeInput } from "@/components/new-atomic/CodeInput";
+import CodeInput from "@/components/new-atomic/CodeInput";
 import CustomCountryPicker from "@/components/new-atomic/CustomCountryPicker";
 import FullScreenModal from "@/components/new-atomic/Modal/FullScreenModal";
+import { modalToast } from "@/components/new-atomic/ModalToastRenderer";
 import { WithBackBTN } from "@/Layout/Header/WithBackBTN";
 import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/providers/ToastProvider";
@@ -23,7 +24,7 @@ import { UseMutateFunction, useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 
 export default function VerifyPhone() {
   const [codeSentRes, setCodeSentRes] = useState<
@@ -65,11 +66,7 @@ export default function VerifyPhone() {
         phoneNumber: data?.phoneNumber || "",
       });
       setCodeSentRes(data);
-      showToast({
-        type: "success",
-        text1: "Success",
-        text2: "Otp Send successfully",
-      });
+      modalToast.success("Success", "Otp Send successfully");
     },
   });
   const { mutate: verifyOtp, isPending: isVerifyingCode } = useMutation({
@@ -89,6 +86,10 @@ export default function VerifyPhone() {
         text2: "Otp verified successfully",
       });
       router.replace("/(app)");
+    },
+    onError: (error) => {
+      console.log("🚀 ~ VerifyPhone ~ error:", error);
+      modalToast.error("Error", error.message);
     },
   });
 
@@ -197,7 +198,7 @@ function VerifyCodeComp({
     },
   });
 
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
   const handleResend = () => {
