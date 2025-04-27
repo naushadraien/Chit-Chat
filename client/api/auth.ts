@@ -22,7 +22,7 @@ export const authApi = {
     return {
       method: "post",
       data,
-      url: "/auth/refresh-token`",
+      url: "/auth/refresh-token",
     };
   },
   sendOtp: (data: { phoneNumber: string }): ApiRequestConfig => {

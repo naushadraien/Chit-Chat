@@ -1,12 +1,13 @@
 import { Avatar } from "@/components/atomic/Avatar";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { ASPECT_RATIO, COLORS, RADII } from "@/theme";
-import React, { useEffect, useRef } from "react";
-import { Animated, Image, Platform, View } from "react-native";
-import Svg, { Circle } from "react-native-svg";
-import * as ImagePickerExpo from "expo-image-picker";
-import ImagePicker from "react-native-image-crop-picker";
 import { pickImage } from "@/utils/image.utils";
+import * as ImagePickerExpo from "expo-image-picker";
+import * as Linking from "expo-linking";
+import React, { useEffect, useRef } from "react";
+import { Alert, Animated, Platform, View } from "react-native";
+import ImagePicker from "react-native-image-crop-picker";
+import Svg, { Circle } from "react-native-svg";
 
 type Props = {
   isUploading?: boolean;
@@ -75,21 +76,80 @@ export default function ProfilePicUpload({
 
   const handleImagePicker = async () => {
     if (Platform.OS === "android") {
-      let { data } = await pickImage(ANDROID_IMAGE_PICKER_OPTIONS);
+      // Check Android version
+      const androidVersion = Platform.Version;
+      console.log("Android version:", androidVersion);
 
-      if (data && data.assets && data.assets[0]) {
-        onImagePick(data.assets[0].uri);
+      // For Android 11 and below, directly launch the picker
+      if (androidVersion <= 30) {
+        try {
+          // Directly launch the picker without permission check for Android 11 and below
+          const result = await ImagePickerExpo.launchImageLibraryAsync(
+            ANDROID_IMAGE_PICKER_OPTIONS
+          );
+
+          if (!result.canceled && result.assets && result.assets[0]) {
+            onImagePick(result.assets[0].uri);
+          }
+        } catch (error: any) {
+          console.log("Android direct picker error:", error);
+
+          // If the direct approach fails due to permission issues
+          if (error.message && error.message.includes("permission")) {
+            // Fall back to the permission-based approach
+            let { data } = await pickImage(ANDROID_IMAGE_PICKER_OPTIONS);
+
+            if (data && data.assets && data.assets[0]) {
+              onImagePick(data.assets[0].uri);
+            }
+          } else {
+            Alert.alert(
+              "Error",
+              "Could not open the image picker below Android 12 device."
+            );
+          }
+        }
+      } else {
+        // Android 11+ - explicitly request permission first
+        try {
+          // Check if we already have permissions
+          let { data } = await pickImage(ANDROID_IMAGE_PICKER_OPTIONS);
+
+          if (data && data.assets && data.assets[0]) {
+            onImagePick(data.assets[0].uri);
+          }
+        } catch (error) {
+          console.error("Android 11+ picker error:", error);
+          Alert.alert(
+            "Error",
+            "Could not open the image picker above Android 11 device."
+          );
+        }
       }
     } else if (Platform.OS === "ios") {
-      const result = await ImagePicker.openPicker({
-        width: 1600, // Optional but kept to maintain ratio
-        height: 900, // Optional but kept to maintain ratio
-        cropping: true,
-        cropperAspectRatio: ASPECT_RATIO.landscape.x / ASPECT_RATIO.landscape.y, // 16/9
-      });
+      try {
+        const result = await ImagePicker.openPicker({
+          width: 1600, // Optional but kept to maintain ratio
+          height: 900, // Optional but kept to maintain ratio
+          cropping: true,
+          cropperAspectRatio: ANDROID_IMAGE_PICKER_OPTIONS.aspect, // 16/9
+        });
 
-      if (result.path) {
-        onImagePick(result.path);
+        if (result.path) {
+          onImagePick(result.path);
+        }
+      } catch (error: any) {
+        console.log("iOS picker error:", error);
+        if (error.code === "E_PERMISSION_MISSING") {
+          Alert.alert(
+            "Permission Required",
+            "Please allow access to your photo library in Settings.",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Open Settings", onPress: () => Linking.openSettings() },
+            ]
+          );
+        }
       }
     }
   };
@@ -120,19 +180,10 @@ export default function ProfilePicUpload({
       }}
     >
       {imgUri ? (
-        <Image
-          source={{
-            uri: imgUri,
-          }}
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-        />
+        <Avatar imageUri={imgUri} />
       ) : (
         <SvgIcon name="user-icon" size={44} fill="INPUTTEXTCOLOR" />
       )}
-      {/* <Avatar size={100} /> */}
       {(isUploading || progress !== undefined) && (
         <Svg
           width={size}

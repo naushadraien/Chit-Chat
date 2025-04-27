@@ -1,10 +1,11 @@
-import { View, Text } from "react-native";
+import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import React from "react";
+import { Text } from "react-native";
 
 export default function MainIndexFileOfApp() {
   return (
-    <View>
+    <SafeAreaWrapper>
       <Text>MainIndexFileOfApp</Text>
-    </View>
+    </SafeAreaWrapper>
   );
 }

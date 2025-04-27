@@ -74,11 +74,18 @@ export class UserService {
 
   async update(userId: string, updateUserDto: UpdateUserDto) {
     if (!userId) throw new BadRequestException('User id is required');
+    const user = await this.findUserById(userId);
     return await this.userModel
       .findByIdAndUpdate(
         userId,
         {
           ...updateUserDto,
+          ...((updateUserDto.firstName || updateUserDto.lastName) && {
+            verificationStatus: {
+              ...user.verificationStatus,
+              isNameProvided: true,
+            },
+          }),
         },
         { new: true },
       )

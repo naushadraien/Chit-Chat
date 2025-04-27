@@ -1,7 +1,7 @@
 import { IconNameType, Icons } from "@/assets/icons";
 import { COLORS, ColorsType } from "@/theme";
 import React, { memo } from "react";
-import { Pressable, ViewStyle } from "react-native";
+import { TouchableOpacity, ViewStyle } from "react-native";
 import { SvgProps } from "react-native-svg";
 
 interface IconProps extends Omit<SvgProps, "width" | "height"> {
@@ -30,7 +30,11 @@ const SvgIconBase = ({
   }
 
   return (
-    <Pressable onPress={onPress} disabled={!onPress} style={[containerStyle]}>
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress}
+      style={[containerStyle]}
+    >
       <IconComponent
         width={size}
         height={size}
@@ -38,7 +42,7 @@ const SvgIconBase = ({
         stroke={stroke ? COLORS[stroke] : undefined}
         {...props}
       />
-    </Pressable>
+    </TouchableOpacity>
   );
 };
 

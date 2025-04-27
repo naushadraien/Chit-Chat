@@ -151,15 +151,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, []);
 
-  const handleUpdateUserDetails = async (userData: UserDetails) => {
+  const handleUpdateUserDetails = async (userData: Partial<UserDetails>) => {
     try {
       const userDataObj = {
         ...userDetails,
         ...userData,
       };
 
-      await setUsersToAsyncStorage(userDataObj);
-      setUserDetails(userDataObj);
+      await setUsersToAsyncStorage(userDataObj as UserDetails);
+      setUserDetails(userDataObj as UserDetails);
     } catch (error) {
       console.log("Error while updating user data", error);
     }
