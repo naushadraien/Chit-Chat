@@ -1,0 +1,39 @@
+If devbuild failed then use the following command:
+
+-->using bun
+bunx expo install --check
+
+bunx expo install expo-build-properties
+
+-->using node default package manager
+npx expo install --check
+
+npx expo install expo-build-properties
+
+
+
+
+In app.json, add:
+
+{
+"expo": {
+...
+"plugins": [
+[
+"expo-build-properties",
+{
+"android": {
+"compileSdkVersion": 35,
+"targetSdkVersion": 34,
+"buildToolsVersion": "35.0.0",
+"kotlinVersion": "1.9.25"
+}
+}
+]
+...
+],
+}}
+
+
+
+then run the prebuild(devbuild) command

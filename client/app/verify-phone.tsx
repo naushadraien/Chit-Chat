@@ -5,8 +5,7 @@ import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { Typography } from "@/components/atomic/Typography";
 import CodeInput from "@/components/new-atomic/CodeInput";
 import CustomCountryPicker from "@/components/new-atomic/CustomCountryPicker";
-import FullScreenModal from "@/components/new-atomic/Modal/FullScreenModal";
-import { modalToast } from "@/components/new-atomic/ModalToastRenderer";
+import { ViewFullScreenModal } from "@/components/new-atomic/Modal/ViewFullScreenModal";
 import { WithBackBTN } from "@/Layout/Header/WithBackBTN";
 import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/providers/ToastProvider";
@@ -24,7 +23,7 @@ import { UseMutateFunction, useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 
 export default function VerifyPhone() {
   const [codeSentRes, setCodeSentRes] = useState<
@@ -66,7 +65,11 @@ export default function VerifyPhone() {
         phoneNumber: data?.phoneNumber || "",
       });
       setCodeSentRes(data);
-      modalToast.success("Success", "Otp Send successfully");
+      showToast({
+        type: "success",
+        text1: "Success",
+        text2: "Otp Send successfully",
+      });
     },
   });
   const { mutate: verifyOtp, isPending: isVerifyingCode } = useMutation({
@@ -89,7 +92,6 @@ export default function VerifyPhone() {
     },
     onError: (error) => {
       console.log("🚀 ~ VerifyPhone ~ error:", error);
-      modalToast.error("Error", error.message);
     },
   });
 
@@ -154,7 +156,7 @@ export default function VerifyPhone() {
           />
         </View>
       </View>
-      <FullScreenModal
+      <ViewFullScreenModal
         visible={!!codeSentRes}
         onClose={() => setCodeSentRes(undefined)}
       >
@@ -165,7 +167,8 @@ export default function VerifyPhone() {
           onResendCode={handleResendCode}
           onVerifyCode={verifyOtp}
         />
-      </FullScreenModal>
+      </ViewFullScreenModal>
+
       <Loader loading={isCodeSending || isVerifyingCode} />
     </SafeAreaWrapper>
   );

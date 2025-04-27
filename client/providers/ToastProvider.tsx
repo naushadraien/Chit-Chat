@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    zIndex: 9999,
+    zIndex: 999999,
     overflow: "hidden",
   },
   content: {

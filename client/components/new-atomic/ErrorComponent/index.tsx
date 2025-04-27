@@ -9,6 +9,7 @@ type Props = {
 };
 
 export default function ErrorComponent({ error }: Props) {
+  if (!error) return null;
   return (
     <View style={styles.errorContainer}>
       <View style={styles.errorIconContainer}>

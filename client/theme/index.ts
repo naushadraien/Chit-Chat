@@ -1,4 +1,5 @@
 import { COLORS, ColorsType } from "@/theme/colors";
+import { ASPECT_RATIO, AspectRatioType } from "@/theme/acpectRatio";
 import { RADII, RadiiType, SPACINGS, SpacingType } from "@/theme/gaps";
 import {
   FONTFAMILIES,
@@ -22,4 +23,6 @@ export {
   FontSizeType,
   LINEHEIGHTS,
   LineHeightType,
+  ASPECT_RATIO,
+  AspectRatioType,
 };

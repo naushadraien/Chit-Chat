@@ -1,5 +1,5 @@
 export type CommonProps = {
-  onBack?: () => {};
+  onBack?: VoidFunction;
 };
 
 export interface HeaderWithTitleProps extends CommonProps {
@@ -7,8 +7,8 @@ export interface HeaderWithTitleProps extends CommonProps {
 }
 
 export interface HeaderWithSearchProps extends HeaderWithTitleProps {
-  onSearch?: () => {};
-  onPressMenu?: () => {};
+  onSearch?: VoidFunction;
+  onPressMenu?: VoidFunction;
 }
 
 export type HeaderProps =
