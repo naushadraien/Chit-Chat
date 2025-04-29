@@ -17,7 +17,6 @@ const AppNavigator = () => (
       contentStyle: { backgroundColor: "#FFFFFF" },
     }}
   >
-    <Stack.Screen name="index" />
     <Stack.Screen name="(tabs)" />
     {/* Add other main app screens here */}
   </Stack>

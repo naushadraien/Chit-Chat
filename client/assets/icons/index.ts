@@ -17,6 +17,8 @@ import UploadPlusIcon from "./upload-plus-icon.svg";
 import ChatIllustrationIcon from "./Illustration.svg";
 import EyeCloseIcon from "./eye-close.svg";
 import EyeOpenIcon from "./eye-open.svg";
+import UsersIcon from "./users-icon.svg";
+import ThreeDotIcon from "./three-dot-icon.svg";
 
 const Icons = {
   "back-btn": BackBTN,
@@ -38,6 +40,8 @@ const Icons = {
   "chat-illustration-icon": ChatIllustrationIcon,
   "eye-close-icon": EyeCloseIcon,
   "eye-open-icon": EyeOpenIcon,
+  "users-icon": UsersIcon,
+  "three-dot-icon": ThreeDotIcon,
 } as const;
 
 type IconNameType = keyof typeof Icons;
