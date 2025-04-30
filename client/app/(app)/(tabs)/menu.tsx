@@ -1,10 +1,6 @@
-import { View, Text } from "react-native";
+import MenuScreen from "@/screens/tabs/menu";
 import React from "react";
 
 export default function Menu() {
-  return (
-    <View>
-      <Text>Menu</Text>
-    </View>
-  );
+  return <MenuScreen />;
 }

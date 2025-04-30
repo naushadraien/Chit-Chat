@@ -41,10 +41,10 @@ export const InputField = forwardRef<TextInput, InputProps>(
         <View
           style={[
             styles.inputContainer,
-            {
-              borderColor: error ? COLORS.REDFF4D4F : COLORS.GREY200,
-              borderWidth: 1,
-            },
+            // {
+            //   borderColor: error ? COLORS.REDFF4D4F : COLORS.GREY200,
+            //   borderWidth: 1,
+            // },
             inputRestProps.inputViewStyle,
           ]}
         >

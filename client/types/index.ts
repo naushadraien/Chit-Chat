@@ -11,6 +11,7 @@ export type LoginResponse = {
   createdAt: string;
   email: string;
   firstName: string | null;
+  fullName: string | null;
   id: string;
   lastName: string | null;
   phoneNumber: string | null;

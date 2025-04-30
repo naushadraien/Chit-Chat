@@ -1,12 +1,13 @@
 // TabLayout.tsx
+import { IconNameType } from "@/assets/icons";
+import { SvgIcon } from "@/components/atomic/SvgIcon";
+import { HapticTab } from "@/components/new-atomic/Tabs/HapticTab";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { useCustomSafeInsets } from "@/hooks/useCustomSafeInsets";
+import { COLORS, FONTFAMILIES, FONTSIZES } from "@/theme";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, StyleSheet, View, Text } from "react-native";
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { SvgIcon } from "@/components/atomic/SvgIcon";
-import { IconNameType } from "@/assets/icons";
-import { COLORS, FONTFAMILIES, FONTSIZES } from "@/theme";
-import { HapticTab } from "@/components/new-atomic/Tabs/HapticTab";
+import { Platform, StyleSheet, Text, View } from "react-native";
 
 // CustomTabBar component
 const CustomTabBar = ({
@@ -21,7 +22,14 @@ const CustomTabBar = ({
   iconName: IconNameType;
 }) => {
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={`${title} tab`}
+      accessibilityHint={`Switch to ${title} tab`}
+    >
       {focused ? (
         // Active tab: show text and dot
         <View style={styles.activeTabContainer}>
@@ -38,6 +46,7 @@ const CustomTabBar = ({
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const insets = useCustomSafeInsets();
   const activeColor = COLORS.INPUTTEXTCOLOR;
   const inactiveColor = COLORS.INPUTTEXTCOLOR;
 
@@ -75,6 +84,7 @@ export default function TabLayout() {
             },
           }),
           height: 65,
+          paddingBottom: Math.max(insets.bottom, 10),
         },
         tabBarShowLabel: false,
       }}

@@ -4,6 +4,16 @@ import { StatusBar, StatusBarStyle } from "expo-status-bar";
 import React, { ReactNode } from "react";
 import { View, ViewStyle } from "react-native";
 
+export type SafeAreaWrapperProps = {
+  topInset?: number;
+  backgroundColor?: ColorsType;
+  bottomInset?: number;
+  children: ReactNode;
+  style?: ViewStyle;
+  statusBarStyle?: StatusBarStyle;
+  statusBarColor?: ColorsType;
+};
+
 export const SafeAreaWrapper = ({
   children,
   style,
@@ -13,15 +23,7 @@ export const SafeAreaWrapper = ({
   statusBarStyle = "dark",
   statusBarColor,
   ...props
-}: {
-  topInset?: number;
-  backgroundColor?: ColorsType;
-  bottomInset?: number;
-  children: ReactNode;
-  style?: ViewStyle;
-  statusBarStyle?: StatusBarStyle;
-  statusBarColor?: ColorsType;
-}) => {
+}: SafeAreaWrapperProps) => {
   const { bottom, top } = useCustomSafeInsets();
   return (
     <View

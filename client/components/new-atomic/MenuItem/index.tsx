@@ -23,11 +23,11 @@ export function MenuItem({ iconName, title, onPress }: Props) {
       <View
         style={{
           flexDirection: "row",
-          gap: 6,
+          gap: 8,
           alignItems: "center",
         }}
       >
-        <SvgIcon name={iconName} size={18} />
+        <SvgIcon name={iconName} size={19} />
         <Typography
           fontFamily="MULISH_SEMIBOLD"
           fontSize="MD"
