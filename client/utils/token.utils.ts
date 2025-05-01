@@ -56,7 +56,7 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
     }
 
     const response = await axios.post(
-      `${envs.BACKEND_URL}/auth/refresh-token`,
+      `${envs.BACKEND_URL}/auth/refresh`,
       { refreshToken: tokens.refreshToken },
       { headers: { "Content-Type": "application/json" } }
     );

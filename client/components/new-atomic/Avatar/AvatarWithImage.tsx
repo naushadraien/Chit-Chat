@@ -3,8 +3,8 @@ import { COLORS, RADII } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, View } from "react-native";
-import { AvatarWithImageProps, CommonProPs } from "./types";
 import { Dot } from "../Dot";
+import { AvatarWithImageProps, CommonProPs } from "./types";
 
 export default function AvatarWithImage({
   gradientColor = [

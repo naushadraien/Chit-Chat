@@ -4,7 +4,7 @@ import { MenuItemWithAvatar } from "@/components/new-atomic/MenuItemWithAvatar";
 import WithTitleAndRightComp from "@/components/ui/WithTitleAndRightComp";
 import withSafeAreaWrapperHOC from "@/lib/withSafeAreaWrapperHOC";
 import { useAuth } from "@/providers/AuthProvider";
-import { extractPhoneParts, formatPhoneNumber } from "@/utils/textHelpers";
+import { extractPhoneParts } from "@/utils/textHelpers";
 import React from "react";
 import { View } from "react-native";
 
