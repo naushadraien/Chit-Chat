@@ -104,7 +104,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="chats"
         options={{
           title: "Chats",
           tabBarIcon: ({ focused, color }) => (
@@ -118,7 +118,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="menu"
+        name="more"
         options={{
           title: "More",
           tabBarIcon: ({ focused, color }) => (

@@ -77,8 +77,9 @@ export const InputField = forwardRef<TextInput, InputProps>(
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
-    width: "100%",
+    // marginBottom: 16,
+    // width: '100%',
+    flexGrow: 1,
   },
   label: {
     marginBottom: 8,

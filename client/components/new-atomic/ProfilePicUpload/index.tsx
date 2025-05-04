@@ -1,12 +1,11 @@
 import { Avatar } from "@/components/atomic/Avatar";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { ASPECT_RATIO, COLORS, RADII } from "@/theme";
-import { pickImage } from "@/utils/image.utils";
+import { pickImage, selectSingleImage } from "@/utils/image.utils";
 import * as ImagePickerExpo from "expo-image-picker";
 import * as Linking from "expo-linking";
 import React, { useEffect, useRef } from "react";
 import { Alert, Animated, Platform, View } from "react-native";
-import ImagePicker from "react-native-image-crop-picker";
 import Svg, { Circle } from "react-native-svg";
 
 type Props = {
@@ -75,82 +74,14 @@ export default function ProfilePicUpload({
   }, [isUploading, progress, progressAnimation, onUploadComplete]);
 
   const handleImagePicker = async () => {
-    if (Platform.OS === "android") {
-      // Check Android version
-      const androidVersion = Platform.Version;
-      console.log("Android version:", androidVersion);
-
-      // For Android 11 and below, directly launch the picker
-      if (androidVersion <= 30) {
-        try {
-          // Directly launch the picker without permission check for Android 11 and below
-          const result = await ImagePickerExpo.launchImageLibraryAsync(
-            ANDROID_IMAGE_PICKER_OPTIONS
-          );
-
-          if (!result.canceled && result.assets && result.assets[0]) {
-            onImagePick(result.assets[0].uri);
-          }
-        } catch (error: any) {
-          console.log("Android direct picker error:", error);
-
-          // If the direct approach fails due to permission issues
-          if (error.message && error.message.includes("permission")) {
-            // Fall back to the permission-based approach
-            let { data } = await pickImage(ANDROID_IMAGE_PICKER_OPTIONS);
-
-            if (data && data.assets && data.assets[0]) {
-              onImagePick(data.assets[0].uri);
-            }
-          } else {
-            Alert.alert(
-              "Error",
-              "Could not open the image picker below Android 12 device."
-            );
-          }
-        }
-      } else {
-        // Android 11+ - explicitly request permission first
-        try {
-          // Check if we already have permissions
-          let { data } = await pickImage(ANDROID_IMAGE_PICKER_OPTIONS);
-
-          if (data && data.assets && data.assets[0]) {
-            onImagePick(data.assets[0].uri);
-          }
-        } catch (error) {
-          console.error("Android 11+ picker error:", error);
-          Alert.alert(
-            "Error",
-            "Could not open the image picker above Android 11 device."
-          );
-        }
+    try {
+      const result = await selectSingleImage();
+      if (result) {
+        onImagePick(result.uri);
       }
-    } else if (Platform.OS === "ios") {
-      try {
-        const result = await ImagePicker.openPicker({
-          width: 1600, // Optional but kept to maintain ratio
-          height: 900, // Optional but kept to maintain ratio
-          cropping: true,
-          cropperAspectRatio: ANDROID_IMAGE_PICKER_OPTIONS.aspect, // 16/9
-        });
-
-        if (result.path) {
-          onImagePick(result.path);
-        }
-      } catch (error: any) {
-        console.log("iOS picker error:", error);
-        if (error.code === "E_PERMISSION_MISSING") {
-          Alert.alert(
-            "Permission Required",
-            "Please allow access to your photo library in Settings.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Open Settings", onPress: () => Linking.openSettings() },
-            ]
-          );
-        }
-      }
+    } catch (error) {
+      console.log("Error while picking image for profile", error);
+      Alert.alert("Error", "Could pick profile image. Please try again.");
     }
   };
 

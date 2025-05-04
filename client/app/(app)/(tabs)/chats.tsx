@@ -5,7 +5,7 @@ import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
 import { Avatar } from "@/components/new-atomic/Avatar";
 import { ChatContent } from "@/components/new-atomic/ChatContent";
-import { ChatInput } from "@/components/new-atomic/ChatInput";
+import { ChatInputBox } from "@/components/new-atomic/ChatInpuBox";
 import CodeInput from "@/components/new-atomic/CodeInput";
 import CustomCountryPicker from "@/components/new-atomic/CustomCountryPicker";
 import { Dot } from "@/components/new-atomic/Dot";
@@ -96,7 +96,7 @@ export default function HomeScreen() {
         <CodeInput inputCount={6} handleCodeInput={(val) => {}} />
         <ProfilePicUpload isUploading={true} onImagePick={(imgUri) => {}} />
       </ScrollView>
-      <ChatInput />
+      <ChatInputBox />
     </SafeAreaWrapper>
   );
 }
