@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { ResourceType, UploadOptions, CloudinaryResult } from '../type';
 import { ALLOWED_FORMATS, RESOURCE_TYPES } from '../constants/constants';
+import { CloudinaryResult, ResourceType, UploadOptions } from '../type';
 
 /* 
   

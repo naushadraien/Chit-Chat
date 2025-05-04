@@ -17,8 +17,9 @@ export class UploadService {
   //this private method is also made in utils folder using static keyword
   private getResourceType(mimetype: string): ResourceType {
     if (mimetype.includes('image')) return RESOURCE_TYPES.image;
-    if (mimetype.includes('video')) return RESOURCE_TYPES.video;
-    if (mimetype === 'application/pdf') return RESOURCE_TYPES.auto; // auto means Automatic detection of content type by cloudinary which means Cloudinary automatically detects content type
+    if (mimetype.includes('video') || mimetype.includes('audio'))
+      return RESOURCE_TYPES.video;
+    if (mimetype === 'application/pdf') return RESOURCE_TYPES.auto;
     return RESOURCE_TYPES.raw;
   }
 
@@ -41,10 +42,16 @@ export class UploadService {
     file: Express.Multer.File,
     options?: Partial<UploadOptions>,
   ): Promise<CloudinaryResult> {
+    console.log('🚀 ~ UploadService ~ file:', file);
     return new Promise((resolve, reject) => {
       const upload = cloudinary.uploader.upload_stream(
         this.getUploadOptions(file, options),
         (error, result) => {
+          console.log(
+            '🚀 ~ UploadService ~ returnnewPromise ~ result:',
+            result,
+          );
+          console.log('🚀 ~ UploadService ~ returnnewPromise ~ error:', error);
           if (error) return reject(error);
           resolve({
             url: result.url,
@@ -74,7 +81,9 @@ export class UploadService {
 
     try {
       // Get resource type from publicId folder structure
-      const resourceType = publicId.startsWith('videos/') ? 'video' : 'image';
+      let resourceType = 'image';
+      if (publicId.startsWith('videos/')) resourceType = 'video';
+      if (publicId.startsWith('audios/')) resourceType = 'audio';
 
       const result = await cloudinary.uploader.destroy(publicId, {
         resource_type: resourceType,
@@ -109,7 +118,9 @@ export class UploadService {
     }
     try {
       // Get resource type from publicId folder structure
-      const resourceType = publicId.startsWith('videos/') ? 'video' : 'image';
+      let resourceType = 'image'; // default
+      if (publicId.startsWith('videos/')) resourceType = 'video';
+      if (publicId.startsWith('audios/')) resourceType = 'audio';
       await cloudinary.uploader.destroy(publicId, {
         resource_type: resourceType,
       });

@@ -12,7 +12,11 @@ export const ALLOWED_FORMATS = [
   'gif', // images
   'mp4',
   'mov',
-  'avi', // videos
+  'avi', // videos,
+  'mp3',
+  'wav',
+  'ogg',
+  'm4a', // audio formats
   'pdf',
   'doc',
   'docx', // documents
