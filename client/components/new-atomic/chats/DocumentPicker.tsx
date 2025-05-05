@@ -1,11 +1,10 @@
-import { COLORS } from "@/theme";
 import { DocumentResult, selectMultipleDocuments } from "@/utils/file.utils";
-import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert } from "react-native";
+import { AttachmentOption } from "./AttachmentPanel";
 
 interface DocumentPickerProps {
-  onSelect: (file: DocumentResult[]) => void;
+  onSelect: (files: DocumentResult[]) => void;
 }
 
 export const DocumentPicker = ({ onSelect }: DocumentPickerProps) => {
@@ -24,33 +23,13 @@ export const DocumentPicker = ({ onSelect }: DocumentPickerProps) => {
 
   return (
     <>
-      <TouchableOpacity style={styles.container} onPress={handlePickDocument}>
-        <View style={[styles.iconBackground, { backgroundColor: "#E91E63" }]}>
-          <MaterialIcons name="attach-file" size={22} color={COLORS.WHITE} />
-        </View>
-        <Text style={styles.label}>File</Text>
-      </TouchableOpacity>
+      <AttachmentOption
+        icon="document-text"
+        label="Document"
+        color="#FF9800"
+        onPress={handlePickDocument}
+        accessibilityLabel="Select a document"
+      />
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 80,
-  },
-  iconBackground: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 12,
-    color: COLORS.GREY600,
-    marginTop: 4,
-  },
-});

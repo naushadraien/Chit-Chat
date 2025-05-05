@@ -1,11 +1,10 @@
-import { COLORS } from "@/theme";
-import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { AttachmentOption } from "./AttachmentPanel";
 import { CameraViewModal } from "./CameraViewModal";
+import { MediaDataType } from "./MediaPicker";
 
 interface CameraPickerProps {
-  onCapture: (photo: string) => void;
+  onCapture: (photoData: MediaDataType[0]) => void;
 }
 
 export const CameraPicker = ({ onCapture }: CameraPickerProps) => {
@@ -19,18 +18,23 @@ export const CameraPicker = ({ onCapture }: CameraPickerProps) => {
     console.log("🚀 ~ handlePhotoTaken ~ photoUri:", photoUri);
     setCameraModalVisible(false);
     if (onCapture) {
-      onCapture(photoUri);
+      const randomString = Math.random().toString(36).substring(2, 8);
+      onCapture({
+        photoId: `camera_${Date.now()}_${randomString}`,
+        photoUrl: photoUri,
+      });
     }
   };
 
   return (
     <>
-      <TouchableOpacity style={styles.container} onPress={handleCameraPress}>
-        <View style={[styles.iconBackground, { backgroundColor: "#00BCD4" }]}>
-          <MaterialIcons name="camera-alt" size={22} color={COLORS.WHITE} />
-        </View>
-        <Text style={styles.label}>Camera</Text>
-      </TouchableOpacity>
+      <AttachmentOption
+        icon="camera"
+        label="Camera"
+        color="#00BCD4"
+        onPress={handleCameraPress}
+        accessibilityLabel="Take a photo with camera"
+      />
 
       <CameraViewModal
         visible={cameraModalVisible}
@@ -40,24 +44,3 @@ export const CameraPicker = ({ onCapture }: CameraPickerProps) => {
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 80,
-  },
-  iconBackground: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 12,
-    color: COLORS.GREY600,
-    marginTop: 4,
-  },
-});

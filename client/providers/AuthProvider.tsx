@@ -230,7 +230,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       // Schedule token refresh
       scheduleTokenRefresh(accessToken);
 
-      router.replace("/(app)");
+      router.replace("/(app)/(tabs)");
 
       // Show success message
       showToast({

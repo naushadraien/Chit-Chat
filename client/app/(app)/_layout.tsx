@@ -3,7 +3,6 @@ import { SafeAreaWrapper } from "@/components/atomic/SafeAreaWrapper";
 import { useCheckStartupCompletion } from "@/hooks/useCheckStartupCompletion";
 import { useAuth } from "@/providers/AuthProvider";
 import { Redirect, Stack } from "expo-router";
-import { useEffect } from "react";
 import "react-native-reanimated";
 
 /**
