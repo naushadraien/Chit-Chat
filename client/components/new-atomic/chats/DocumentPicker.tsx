@@ -1,7 +1,7 @@
 import { DocumentResult, selectMultipleDocuments } from "@/utils/file.utils";
 import React from "react";
 import { Alert } from "react-native";
-import { AttachmentOption } from "./AttachmentPanel";
+import { AttachmentOption } from "./AttachmentOption";
 
 interface DocumentPickerProps {
   onSelect: (files: DocumentResult[]) => void;

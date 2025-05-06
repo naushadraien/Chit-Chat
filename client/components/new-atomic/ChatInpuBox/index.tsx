@@ -153,6 +153,9 @@ export function ChatInputBox({
             onChangeText={setMessage}
             multiline
             style={styles.textInput}
+            mainContainerStyle={{
+              flex: 1,
+            }}
           />
 
           {/* Audio button always visible */}

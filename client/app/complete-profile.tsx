@@ -72,7 +72,7 @@ export default function CompleteProfile() {
     },
     onSuccess: async (data) => {
       await updateUserDetails?.(data);
-      router.replace("/(app)");
+      router.replace("/(app)/(tabs)");
     },
   });
 
@@ -97,6 +97,7 @@ export default function CompleteProfile() {
             justifyContent: "center",
             alignItems: "center",
             flex: 1,
+            gap: 12,
           }}
         >
           <Controller

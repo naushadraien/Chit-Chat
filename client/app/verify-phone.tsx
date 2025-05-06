@@ -88,7 +88,7 @@ export default function VerifyPhone() {
         text1: "Success",
         text2: "Otp verified successfully",
       });
-      router.replace("/(app)");
+      router.replace("/complete-profile");
     },
     onError: (error) => {
       console.log("🚀 ~ VerifyPhone ~ error:", error);

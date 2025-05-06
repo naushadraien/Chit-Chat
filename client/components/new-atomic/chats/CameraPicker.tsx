@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { AttachmentOption } from "./AttachmentPanel";
 import { CameraViewModal } from "./CameraViewModal";
 import { MediaDataType } from "./MediaPicker";
+import { AttachmentOption } from "./AttachmentOption";
 
 interface CameraPickerProps {
   onCapture: (photoData: MediaDataType[0]) => void;

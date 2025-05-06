@@ -30,13 +30,13 @@ const MenuScreen = () => {
       >
         <MenuItemWithAvatar
           phone={extractPhoneParts(userDetails?.phoneNumber || "").formatted}
-          userName={userDetails?.fullName || ""}
+          userName={userDetails?.firstName + " " + userDetails?.lastName}
           imgUri={userDetails?.avatar || ""}
         />
 
         <MenuItem iconName="user-icon" title="Account" />
         <MenuItem iconName="chat-icon" title="Chats" />
-        <MenuItem iconName="appearance-icon" title="Appereance" />
+        <MenuItem iconName="appearance-icon" title="Appearance" />
         <MenuItem iconName="notification-icon" title="Notification" />
         <MenuItem iconName="privacy-icon" title="Privacy" />
         <MenuItem iconName="file-icon" title="Data Usage" />

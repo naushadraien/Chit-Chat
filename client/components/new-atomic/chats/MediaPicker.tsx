@@ -1,7 +1,7 @@
 import { selectMultipleImages } from "@/utils/image.utils";
 import React from "react";
 import { Alert } from "react-native";
-import { AttachmentOption } from "./AttachmentPanel";
+import { AttachmentOption } from "./AttachmentOption";
 
 export type MediaDataType = Array<{
   photoId: string;
