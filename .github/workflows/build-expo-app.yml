@@ -36,6 +36,12 @@ jobs:
 
       - name: Configure EAS project
         run: |
+          # Set default backend URL if not provided in secrets
+          BACKEND_URL="${{ secrets.EXPO_PUBLIC_BACKEND_URL }}"
+          if [ -z "$BACKEND_URL" ]; then
+            BACKEND_URL="http://localhost:4000/api/v1"
+          fi
+
           # Add owner to app.json
           if [ -f "app.json" ]; then
             if ! grep -q "owner" app.json; then
@@ -45,9 +51,9 @@ jobs:
               echo "Owner field already exists in app.json"
             fi
 
-            # Add backend URL if needed
-            jq '.expo.extra.backendUrl = "${{ secrets.EXPO_PUBLIC_BACKEND_URL || "http://localhost:4000/api/v1" }}"' app.json > app.json.tmp && mv app.json.tmp app.json
-            echo "Added backend URL to app.json"
+            # Add backend URL to app.json
+            jq ".expo.extra.backendUrl = \"$BACKEND_URL\"" app.json > app.json.tmp && mv app.json.tmp app.json
+            echo "Added backend URL to app.json: $BACKEND_URL"
           else
             echo "app.json not found, running eas init"
             echo "y" | bunx eas init --non-interactive
@@ -90,7 +96,7 @@ jobs:
             
             # Fallback: Get the latest build ID from the build list
             LATEST_BUILD=$(bunx eas build:list --platform=android --json --non-interactive --limit=1)
-            BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id // empty')
+            BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id')
           fi
 
           if [ -z "$BUILD_ID" ]; then
@@ -112,42 +118,34 @@ jobs:
           while [ $ELAPSED -lt $TIMEOUT ]; do
             echo "Checking build status (attempt $((ELAPSED+1))/$TIMEOUT)..."
             
-            # Get build status from build list (more reliable than view)
-            BUILD_LIST=$(bunx eas build:list --non-interactive)
+            # Get current build list
+            BUILD_LIST=$(bunx eas build:list)
             
-            # Print output for debugging
-            echo "Build list output:"
-            echo "$BUILD_LIST"
+            # Extract our build info by getting lines around our build ID
+            BUILD_INFO=$(echo "$BUILD_LIST" | grep -A 10 "${{ env.BUILD_ID }}" | head -15)
+            echo "Build info:"
+            echo "$BUILD_INFO"
             
-            # Look for our build ID and extract the status
-            if echo "$BUILD_LIST" | grep -q "${{ env.BUILD_ID }}"; then
-              # Extract 5 lines after our build ID for context
-              BUILD_INFO=$(echo "$BUILD_LIST" | grep -A 5 "${{ env.BUILD_ID }}")
-              echo "Found our build in the list:"
-              echo "$BUILD_INFO"
+            # Check for status
+            if echo "$BUILD_INFO" | grep -q "Status"; then
+              # Extract status - this pulls out just the word after Status:
+              STATUS=$(echo "$BUILD_INFO" | grep -i "Status" | sed -E 's/.*Status[[:space:]]*([a-zA-Z]+).*/\1/' | tr '[:upper:]' '[:lower:]')
+              echo "Build status: $STATUS"
               
-              # Extract status
-              if echo "$BUILD_INFO" | grep -q "Status"; then
-                STATUS=$(echo "$BUILD_INFO" | grep "Status" | sed 's/.*Status[[:space:]]*\([a-zA-Z]*\).*/\1/' | tr '[:upper:]' '[:lower:]')
-                echo "Build status: $STATUS"
-                
-                if [ "$STATUS" = "finished" ]; then
-                  echo "Build completed successfully!"
-                  break
-                elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
-                  echo "Build failed or was canceled"
-                  exit 1
-                else
-                  echo "Build still in progress (status: $STATUS)"
-                fi
+              if [ "$STATUS" = "finished" ]; then
+                echo "Build completed successfully!"
+                break
+              elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
+                echo "Build failed or was canceled"
+                exit 1
               else
-                echo "Could not find status in build info"
+                echo "Build still in progress (status: $STATUS)"
               fi
             else
-              echo "Build ID not found in build list yet. It may take a moment to appear."
+              echo "Could not find status in build info"
             fi
             
-            echo "Waiting for build to complete... ($ELAPSED/$TIMEOUT minutes)"
+            echo "Waiting for next check... ($ELAPSED/$TIMEOUT minutes)"
             sleep $POLL_INTERVAL
             ELAPSED=$((ELAPSED+1))
           done
@@ -161,7 +159,7 @@ jobs:
         if: success()
         run: |
           echo "Downloading build with ID: ${{ env.BUILD_ID }}"
-          bunx eas build:download --non-interactive --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
+          bunx eas build:download --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
 
           if [ -f "./ChitChat.apk" ]; then
             echo "APK downloaded successfully"
