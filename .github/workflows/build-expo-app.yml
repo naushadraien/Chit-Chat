@@ -3,10 +3,10 @@ name: Build Expo App
 on:
   push:
     branches:
-      - main # or whatever your production branch is
+      - main
     paths:
-      - "client/**" # Only trigger on changes to client code
-  workflow_dispatch: # Allow manual triggering
+      - "client/**"
+  workflow_dispatch:
 
 jobs:
   build-expo-app:
@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./client # Set working directory to client folder
+        working-directory: ./client
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -38,17 +38,17 @@ jobs:
         run: |
           # Add owner to app.json
           if [ -f "app.json" ]; then
-             if grep -q "owner" app.json; then
-             echo "Owner field already exists in app.json"
-             else
-              # Use temp file approach for more reliability
-             jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
-             echo "Added owner to app.json"
-             fi
+            if ! grep -q "owner" app.json; then
+              jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
+              echo "Added owner to app.json"
+            else
+              echo "Owner field already exists in app.json"
+            fi
 
-              # Show the updated config
-              cat app.json | grep -A 5 "expo"
-           else
+            # Add backend URL if needed
+            jq '.expo.extra.backendUrl = "${{ secrets.EXPO_PUBLIC_BACKEND_URL || "http://localhost:4000/api/v1" }}"' app.json > app.json.tmp && mv app.json.tmp app.json
+            echo "Added backend URL to app.json"
+          else
             echo "app.json not found, running eas init"
             echo "y" | bunx eas init --non-interactive
           fi
@@ -58,7 +58,8 @@ jobs:
           cat > eas.json << EOF
           {
             "cli": {
-              "version": ">= 3.13.3"
+              "version": ">= 3.13.3",
+              "appVersionSource": "remote"
             },
             "build": {
               "preview": {
@@ -72,81 +73,103 @@ jobs:
           }
           EOF
           echo "Created eas.json for CI build"
-          cat eas.json
 
       - name: Build Android app
-        run: bunx eas build --platform android --profile preview --non-interactive --no-wait
-      # Optional: Also build for iOS if you need it
-      # - name: Build iOS app
-      #   run: npx eas build --platform ios --profile preview --non-interactive --no-wait
-
-      - name: Wait for build to complete
+        id: build-app
         run: |
-          echo "Waiting for build to complete..."
+          # Submit the build and grab the build ID from the output
+          BUILD_OUTPUT=$(bunx eas build --platform android --profile preview --non-interactive --no-wait)
+          echo "$BUILD_OUTPUT"
 
-          # Debug output - see what the actual command returns
-          echo "Checking build list..."
-          bunx eas build:list --platform=android || echo "Command failed but continuing"
-
-          # Use a simpler approach - don't filter by status at first
-          echo "Getting most recent build ID..."
-          LATEST_BUILD=$(bunx eas build:list --platform=android --json --non-interactive --limit=1 2>/dev/null || echo '[]')
-          echo "Latest build output: $LATEST_BUILD"
-
-          BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id // empty')
+          # Extract the build ID using regex pattern matching
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -o -E '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
 
           if [ -z "$BUILD_ID" ]; then
-            echo "No builds found. There might be an issue with the build submission."
+            echo "Failed to extract build ID from output. Trying to get it from the build list..."
+            sleep 10
+            
+            # Fallback: Get the latest build ID from the build list
+            LATEST_BUILD=$(bunx eas build:list --platform=android --json --non-interactive --limit=1)
+            BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id // empty')
+          fi
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "No build ID found. Exiting."
             exit 1
           fi
 
-          echo "Found build ID: $BUILD_ID"
+          echo "Using build ID: $BUILD_ID"
           echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
-          # Now monitor this specific build until it completes
-          echo "Monitoring build status..."
-          TIMEOUT=30 # minutes
+      - name: Monitor build status
+        run: |
+          TIMEOUT=60  # minutes
           ELAPSED=0
+          POLL_INTERVAL=60  # seconds
+
+          echo "Monitoring build with ID: ${{ env.BUILD_ID }}"
 
           while [ $ELAPSED -lt $TIMEOUT ]; do
-            # Use build:view command instead of list (more reliable)
-            echo "Checking status for build $BUILD_ID..."
+            echo "Checking build status (attempt $((ELAPSED+1))/$TIMEOUT)..."
             
-            # Get build status using view command - REMOVED --non-interactive flag
-            BUILD_VIEW_OUTPUT=$(bunx eas build:view $BUILD_ID 2>/dev/null || echo "Failed to get build status")
+            # Get build status from build list (more reliable than view)
+            BUILD_LIST=$(bunx eas build:list --non-interactive)
             
-            # Print some of the output for debugging
-            echo "Build view output (first few lines):"
-            echo "$BUILD_VIEW_OUTPUT" | head -10
+            # Print output for debugging
+            echo "Build list output:"
+            echo "$BUILD_LIST"
             
-            # Extract status using grep/sed
-            if echo "$BUILD_VIEW_OUTPUT" | grep -q "Status:"; then
-              STATUS=$(echo "$BUILD_VIEW_OUTPUT" | grep -i "Status:" | head -1 | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
-              echo "Extracted status: $STATUS"
+            # Look for our build ID and extract the status
+            if echo "$BUILD_LIST" | grep -q "${{ env.BUILD_ID }}"; then
+              # Extract 5 lines after our build ID for context
+              BUILD_INFO=$(echo "$BUILD_LIST" | grep -A 5 "${{ env.BUILD_ID }}")
+              echo "Found our build in the list:"
+              echo "$BUILD_INFO"
+              
+              # Extract status
+              if echo "$BUILD_INFO" | grep -q "Status"; then
+                STATUS=$(echo "$BUILD_INFO" | grep "Status" | sed 's/.*Status[[:space:]]*\([a-zA-Z]*\).*/\1/' | tr '[:upper:]' '[:lower:]')
+                echo "Build status: $STATUS"
+                
+                if [ "$STATUS" = "finished" ]; then
+                  echo "Build completed successfully!"
+                  break
+                elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
+                  echo "Build failed or was canceled"
+                  exit 1
+                else
+                  echo "Build still in progress (status: $STATUS)"
+                fi
+              else
+                echo "Could not find status in build info"
+              fi
             else
-              STATUS="unknown"
-              echo "Could not extract status from output"
-            fi
-            
-            echo "Build status: $STATUS"
-            
-            if [ "$STATUS" = "finished" ]; then
-              echo "Build completed successfully!"
-              break
-            elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
-              echo "Build failed or was canceled"
-              exit 1
-            elif [ "$STATUS" = "unknown" ]; then
-              echo "Could not determine build status, will try again..."
+              echo "Build ID not found in build list yet. It may take a moment to appear."
             fi
             
             echo "Waiting for build to complete... ($ELAPSED/$TIMEOUT minutes)"
-            sleep 60
+            sleep $POLL_INTERVAL
             ELAPSED=$((ELAPSED+1))
           done
+
+          if [ $ELAPSED -ge $TIMEOUT ]; then
+            echo "Timed out waiting for build to complete after $TIMEOUT minutes"
+            exit 1
+          fi
+
       - name: Download Android build
         if: success()
-        run: bunx eas build:download --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
+        run: |
+          echo "Downloading build with ID: ${{ env.BUILD_ID }}"
+          bunx eas build:download --non-interactive --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
+
+          if [ -f "./ChitChat.apk" ]; then
+            echo "APK downloaded successfully"
+            ls -la ./ChitChat.apk
+          else
+            echo "Failed to download APK"
+            exit 1
+          fi
 
       - name: Upload APK as artifact
         if: success()
@@ -155,3 +178,17 @@ jobs:
           name: ChitChat-APK
           path: ./client/ChitChat.apk
           retention-days: 14
+
+      - name: Create GitHub Release
+        if: success() && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./client/ChitChat.apk
+          name: ChitChat v${{ github.run_number }}
+          tag_name: v${{ github.run_number }}
+          body: |
+            ChitChat Mobile App Build ${{ github.run_number }}
+
+            Built from commit: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
