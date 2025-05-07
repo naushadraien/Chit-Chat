@@ -88,63 +88,33 @@ jobs:
           echo "Checking build list..."
           bunx eas build:list --platform=android
 
-          # Try to get build info with error handling
-          BUILD_LIST_OUTPUT=$(bunx eas build:list --platform=android --status=in-queue,in-progress --json || echo '[]')
+          # Try to get build info with correct status values
+          BUILD_LIST_OUTPUT=$(bunx eas build:list --platform=android --status=new,in-progress --json || echo '[]')
           echo "Raw build list output: $BUILD_LIST_OUTPUT"
 
           # Check if output is valid JSON
           if ! echo "$BUILD_LIST_OUTPUT" | jq . >/dev/null 2>&1; then
-            echo "Invalid JSON returned from build list command"
-            echo "Waiting 30 seconds and trying again..."
-            sleep 30
-            BUILD_LIST_OUTPUT=$(bunx eas build:list --platform=android --status=in-queue,in-progress --json || echo '[]')
+          echo "Invalid JSON returned from build list command"
+          echo "Waiting 30 seconds and trying again..."
+          sleep 30
+          BUILD_LIST_OUTPUT=$(bunx eas build:list --platform=android --status=new,in-progress --json || echo '[]')
           fi
 
           # Extract build ID with error handling
           BUILD_ID=$(echo "$BUILD_LIST_OUTPUT" | jq -r '.[0].id // empty')
 
           if [ -z "$BUILD_ID" ]; then
-            echo "No in-progress build found. Checking recent builds..."
-            RECENT_BUILDS=$(bunx eas build:list --platform=android --json --limit=1 || echo '[]')
-            BUILD_ID=$(echo "$RECENT_BUILDS" | jq -r '.[0].id // empty')
-            
-            if [ -z "$BUILD_ID" ]; then
-              echo "No builds found at all. There might be an issue with the build submission."
-              exit 1
-            fi
+          echo "No in-progress build found. Checking recent builds..."
+          RECENT_BUILDS=$(bunx eas build:list --platform=android --json --limit=1 || echo '[]')
+          BUILD_ID=$(echo "$RECENT_BUILDS" | jq -r '.[0].id // empty')
+
+          if [ -z "$BUILD_ID" ]; then
+          echo "No builds found at all. There might be an issue with the build submission."
+          exit 1
+          fi
           fi
 
           echo "Found build ID: $BUILD_ID"
-
-          # Wait for build to finish with timeout
-          TIMEOUT=60 # minutes
-          ELAPSED=0
-
-          while [ $ELAPSED -lt $TIMEOUT ]; do
-            BUILD_STATUS_OUTPUT=$(bunx eas build:list --json --id=$BUILD_ID || echo '[]')
-            STATUS=$(echo "$BUILD_STATUS_OUTPUT" | jq -r '.[0].status // "unknown"')
-            echo "Build status: $STATUS"
-            
-            if [ "$STATUS" = "finished" ]; then
-              echo "Build completed successfully!"
-              break
-            elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
-              echo "Build failed or was canceled"
-              exit 1
-            elif [ "$STATUS" = "unknown" ]; then
-              echo "Could not determine build status, will try again..."
-            fi
-            
-            sleep 60
-            ELAPSED=$((ELAPSED+1))
-          done
-
-          if [ $ELAPSED -ge $TIMEOUT ]; then
-            echo "Build timed out after $TIMEOUT minutes"
-            exit 1
-          fi
-
-          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
       - name: Download Android build
         if: success()
