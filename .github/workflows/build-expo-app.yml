@@ -1,104 +1,61 @@
-name: Android App APK Build
+name: Build & Download Expo APK
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "client/**"
   workflow_dispatch:
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./client
-    steps:
-      - name: Setup repo
-        uses: actions/checkout@v4
 
-      - name: Setup Bun
+    steps:
+      - name: 🧾 Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: "17"
-          distribution: "temurin"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.EXPO_ACCESS_TOKEN }}
-
-      - name: Install dependencies
+      - name: 📦 Install Dependencies
         run: bun install
 
-      - name: Configure EAS project
+      - name: 🚀 Install EAS CLI
+        run: bun add -g eas-cli
+
+      - name: 🔐 Login to Expo
+        run: eas login --access-token ${{ secrets.EXPO_ACCESS_TOKEN }}
+
+      - name: 🏗 Start APK Build
+        run: eas build --platform android --non-interactive --profile android --json > build-result.json
+
+      - name: ⏳ Wait for Build & Get APK URL
+        id: wait_and_get_url
         run: |
-          # Add owner to app.json if needed
-          if [ -f "app.json" ]; then
-            if ! grep -q "owner" app.json; then
-              jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
-              echo "Added owner to app.json"
-            fi
+          BUILD_ID=$(jq -r '.builds.android.buildId' build-result.json)
+          echo "Build ID: $BUILD_ID"
+
+          STATUS=""
+          until [[ "$STATUS" == "finished" || "$STATUS" == "errored" ]]; do
+            STATUS=$(eas build:status --json | jq -r '.builds[0].status')
+            echo "Status: $STATUS"
+            sleep 15
+          done
+
+          if [ "$STATUS" == "finished" ]; then
+            APK_URL=$(eas build:status --json | jq -r '.builds[0].artifacts.buildUrl')
+            echo "✅ APK URL: $APK_URL"
+            echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
           else
-            echo "app.json not found, running eas init"
-            echo "y" | bunx eas init --non-interactive
+            echo "❌ Build failed"
+            exit 1
           fi
 
-      - name: Configure eas.json for local build
+      - name: 📥 Download APK
         run: |
-          cat > eas.json << EOF
-          {
-            "cli": {
-              "version": ">= 3.13.3",
-              "appVersionSource": "remote"
-            },
-            "build": {
-              "preview": {
-                "distribution": "internal",
-                "android": {
-                  "buildType": "apk",
-                  "withoutCredentials": true
-                }
-              }
-            }
-          }
-          EOF
-          echo "Created eas.json for local build"
-          cat eas.json
+          curl -L "${{ steps.wait_and_get_url.outputs.apk_url }}" -o app.apk
 
-      - name: Set up environment variables
-        run: |
-          # Create .env file with correct backend URL based on branch
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            # Production URL (from GitHub secret)
-            echo "EXPO_PUBLIC_BACKEND_URL=${{ secrets.EXPO_PUBLIC_BACKEND_URL_PROD }}" > .env
-            echo "Using production backend URL"
-          else
-            # Development/staging URL
-            echo "EXPO_PUBLIC_BACKEND_URL=${{ secrets.EXPO_PUBLIC_BACKEND_URL_DEV || 'http://localhost:3001' }}" > .env
-            echo "Using development backend URL"
-          fi
-
-          # Show the configured URL (but mask the actual value for security)
-          echo "Backend URL configured with prefix: $(echo $EXPO_PUBLIC_BACKEND_URL | cut -c 1-10)..."
-
-      - name: Build Android app
-        run: bunx eas build --platform android --profile preview --local --output ./ChitChat.apk
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: 📤 Upload APK as Artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: ChitChat-APK
-          path: ./client/ChitChat.apk
-          retention-days: 14
+          name: expo-apk
+          path: app.apk
