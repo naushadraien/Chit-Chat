@@ -83,49 +83,67 @@ jobs:
       - name: Wait for build to complete
         run: |
           echo "Waiting for build to complete..."
-                ...existing code...
 
-                while [ $ELAPSED -lt $TIMEOUT ]; do
-                  echo "Checking status for build $BUILD_ID..."
+          # Debug output - see what the actual command returns
+          echo "Checking build list..."
+          bunx eas build:list --platform=android || echo "Command failed but continuing"
 
-             # old list-based logic (unreliable)
-                 BUILD_STATUS=$(bunx eas build:list --json --non-interactive --limit=100 2>/dev/null || echo '[]')
-                 echo "Build status check returned data of length: $(echo "$BUILD_STATUS" | wc -c) bytes"
-                 if echo "$BUILD_STATUS" | jq . >/dev/null 2>&1; then
-                   STATUS=$(echo "$BUILD_STATUS" | jq -r --arg ID "$BUILD_ID" '.[] | select(.id == $ID) | .status // "unknown"' | tr '[:upper:]' '[:lower:]')
-                 else
-                   echo "Warning: Invalid JSON returned, trying basic command"
-                   PLAIN_STATUS=$(bunx eas build:list --id="$BUILD_ID" 2>/dev/null | grep -i status | head -1 || echo "Status: unknown")
-                   STATUS=$(echo "$PLAIN_STATUS" | grep -o "Status:.*" | sed 's/Status: *//i' | tr '[:upper:]' '[:lower:]')
-                 fi
+          # Use a simpler approach - don't filter by status at first
+          echo "Getting most recent build ID..."
+          LATEST_BUILD=$(bunx eas build:list --platform=android --json --non-interactive --limit=1 2>/dev/null || echo '[]')
+          echo "Latest build output: $LATEST_BUILD"
 
-                 # new view-based logic
-                 BUILD_VIEW=$(bunx eas build:view $BUILD_ID --non-interactive 2>/dev/null || echo "")
-                 echo "Build view output:"
-                 echo "$BUILD_VIEW"
+          BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id // empty')
 
-                 if [[ "$BUILD_VIEW" =~ Status:\ ([A-Za-z]+) ]]; then
-                   STATUS=${BASH_REMATCH[1],,}
-                 else
-                   echo "Warning: could not parse status, defaulting to unknown"
-                   STATUS="unknown"
-                 fi
+          if [ -z "$BUILD_ID" ]; then
+            echo "No builds found. There might be an issue with the build submission."
+            exit 1
+          fi
 
-                  echo "Build status: $STATUS"
+          echo "Found build ID: $BUILD_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
-                  if [ "$STATUS" = "finished" ]; then
-                    echo "Build completed successfully!"
-                    break
-                  elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
-                    echo "Build failed or was canceled"
-                    exit 1
-                  fi
+          # Now monitor this specific build until it completes
+          echo "Monitoring build status..."
+          TIMEOUT=60 # minutes
+          ELAPSED=0
 
-                  echo "Waiting for build to complete... ($ELAPSED/$TIMEOUT minutes)"
-                  sleep 60
-                  ELAPSED=$((ELAPSED+1))
-                done
-
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            # Use build:view command instead of list (more reliable)
+            echo "Checking status for build $BUILD_ID..."
+            
+            # Get build status using view command
+            BUILD_VIEW_OUTPUT=$(bunx eas build:view $BUILD_ID --non-interactive 2>/dev/null || echo "Failed to get build status")
+            
+            # Print some of the output for debugging
+            echo "Build view output (first few lines):"
+            echo "$BUILD_VIEW_OUTPUT" | head -10
+            
+            # Extract status using grep/sed
+            if echo "$BUILD_VIEW_OUTPUT" | grep -q "Status:"; then
+              STATUS=$(echo "$BUILD_VIEW_OUTPUT" | grep -i "Status:" | head -1 | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
+              echo "Extracted status: $STATUS"
+            else
+              STATUS="unknown"
+              echo "Could not extract status from output"
+            fi
+            
+            echo "Build status: $STATUS"
+            
+            if [ "$STATUS" = "finished" ]; then
+              echo "Build completed successfully!"
+              break
+            elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
+              echo "Build failed or was canceled"
+              exit 1
+            elif [ "$STATUS" = "unknown" ]; then
+              echo "Could not determine build status, will try again..."
+            fi
+            
+            echo "Waiting for build to complete... ($ELAPSED/$TIMEOUT minutes)"
+            sleep 60
+            ELAPSED=$((ELAPSED+1))
+          done
       - name: Download Android build
         if: success()
         run: bunx eas build:download --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
