@@ -109,9 +109,9 @@ jobs:
           ELAPSED=0
 
           while [ $ELAPSED -lt $TIMEOUT ]; do
-            # Get status of this specific build
-            BUILD_STATUS=$(bunx eas build:list --json --id="$BUILD_ID" || echo '[]')
-            STATUS=$(echo "$BUILD_STATUS" | jq -r '.[0].status // "unknown"')
+            # Get status of this specific build - CORRECTED COMMAND
+            BUILD_STATUS=$(bunx eas build:list --json --non-interactive --limit=100 || echo '[]')
+            STATUS=$(echo "$BUILD_STATUS" | jq -r --arg ID "$BUILD_ID" '.[] | select(.id == $ID) | .status // "unknown"' | tr '[:upper:]' '[:lower:]')
             
             echo "Build status: $STATUS"
             
