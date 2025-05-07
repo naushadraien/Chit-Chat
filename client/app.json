@@ -18,7 +18,8 @@
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.CAMERA"
       ],
       "package": "com.naushadraien.chitchat"
     },
@@ -67,6 +68,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "dfe5dcfc-ce13-4cd9-b0c4-48775db927c3"
+      }
     }
   }
 }
