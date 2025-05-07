@@ -60,13 +60,15 @@ jobs:
           cat > eas.json << EOF
           {
             "cli": {
-              "version": ">= 3.13.3"
+              "version": ">= 3.13.3",
+              "appVersionSource": "remote"
             },
             "build": {
               "preview": {
                 "distribution": "internal",
                 "android": {
-                  "buildType": "apk"
+                  "buildType": "apk",
+                  "withoutCredentials": true
                 }
               }
             }
