@@ -77,6 +77,22 @@ jobs:
           echo "Created eas.json for local build"
           cat eas.json
 
+      - name: Set up environment variables
+        run: |
+          # Create .env file with correct backend URL based on branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # Production URL (from GitHub secret)
+            echo "EXPO_PUBLIC_BACKEND_URL=${{ secrets.EXPO_PUBLIC_BACKEND_URL_PROD }}" > .env
+            echo "Using production backend URL"
+          else
+            # Development/staging URL
+            echo "EXPO_PUBLIC_BACKEND_URL=${{ secrets.EXPO_PUBLIC_BACKEND_URL_DEV || 'http://localhost:3001' }}" > .env
+            echo "Using development backend URL"
+          fi
+
+          # Show the configured URL (but mask the actual value for security)
+          echo "Backend URL configured with prefix: $(echo $EXPO_PUBLIC_BACKEND_URL | cut -c 1-10)..."
+
       - name: Build Android app
         run: bunx eas build --platform android --profile preview --local --output ./ChitChat.apk
 
