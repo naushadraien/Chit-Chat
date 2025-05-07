@@ -88,33 +88,93 @@ jobs:
           echo "Checking build list..."
           bunx eas build:list --platform=android
 
-          # Try to get build info with correct status values
-          BUILD_LIST_OUTPUT=$(bunx eas build:list --platform=android --status=new,in-progress --json || echo '[]')
-          echo "Raw build list output: $BUILD_LIST_OUTPUT"
+          # Use a simpler approach - don't filter by status at first
+          echo "Getting most recent build ID..."
+          LATEST_BUILD=$(bunx eas build:list --platform=android --json --limit=1 || echo '[]')
+          echo "Latest build output: $LATEST_BUILD"
 
-          # Check if output is valid JSON
-          if ! echo "$BUILD_LIST_OUTPUT" | jq . >/dev/null 2>&1; then
-          echo "Invalid JSON returned from build list command"
-          echo "Waiting 30 seconds and trying again..."
-          sleep 30
-          BUILD_LIST_OUTPUT=$(bunx eas build:list --platform=android --status=new,in-progress --json || echo '[]')
-          fi
-
-          # Extract build ID with error handling
-          BUILD_ID=$(echo "$BUILD_LIST_OUTPUT" | jq -r '.[0].id // empty')
+          BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id // empty')
 
           if [ -z "$BUILD_ID" ]; then
-          echo "No in-progress build found. Checking recent builds..."
-          RECENT_BUILDS=$(bunx eas build:list --platform=android --json --limit=1 || echo '[]')
-          BUILD_ID=$(echo "$RECENT_BUILDS" | jq -r '.[0].id // empty')
-
-          if [ -z "$BUILD_ID" ]; then
-          echo "No builds found at all. There might be an issue with the build submission."
-          exit 1
-          fi
+            echo "No builds found. There might be an issue with the build submission."
+            exit 1
           fi
 
           echo "Found build ID: $BUILD_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+
+          # Now monitor this specific build until it completes
+          echo "Monitoring build status..."
+          TIMEOUT=60 # minutes
+          ELAPSED=0
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            # Get status of this specific build
+            BUILD_STATUS=$(bunx eas build:list --json --id="$BUILD_ID" || echo '[]')
+            STATUS=$(echo "$BUILD_STATUS" | jq -r '.[0].status // "unknown"')
+            
+            echo "Build status: $STATUS"
+            
+            if [ "$STATUS" = "finished" ]; then
+              echo "Build completed successfully!"
+              break
+            elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
+              echo "Build failed or was canceled"
+              exit 1
+            elif [ "$STATUS" = "unknown" ]; then
+              echo "Could not determine build status, will try again..."
+            fi
+            
+            echo "Waiting for build to complete... ($ELAPSED/$TIMEOUT minutes)"
+            sleep 60
+            ELAPSED=$((ELAPSED+1))
+          done
+
+          if [ $ELAPSED -ge $TIMEOUT ]; then
+            echo "Build timed out after $TIMEOUT minutes"
+            exit 1
+          fi
+
+          echo "Build completed successfully with ID: $BUILD_ID"
+
+      - name: Find and track your build
+        run: |
+          # Wait for your build to be detected
+          RETRIES=5
+          ATTEMPT=0
+          BUILD_ID=""
+
+          # Get the commit we're building
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          echo "Current commit: $CURRENT_COMMIT"
+
+          while [ $ATTEMPT -lt $RETRIES ] && [ -z "$BUILD_ID" ]; do
+            ATTEMPT=$((ATTEMPT+1))
+            echo "Attempt $ATTEMPT to find our build..."
+            
+            # Get recent builds
+            BUILDS=$(bunx eas build:list --platform=android --json --limit=5 || echo '[]')
+            
+            # Try to find a build for our commit
+            BUILD_ID=$(echo "$BUILDS" | jq -r --arg COMMIT "$CURRENT_COMMIT" '.[] | select(.git.commit == $COMMIT) | .id' | head -1)
+            
+            if [ -n "$BUILD_ID" ]; then
+              echo "Found build for our commit: $BUILD_ID"
+              break
+            fi
+            
+            echo "No build found for our commit yet, waiting 30 seconds..."
+            sleep 30
+          done
+
+          # Fallback to most recent build if we couldn't find one for our commit
+          if [ -z "$BUILD_ID" ]; then
+            echo "Couldn't find build for our commit, using most recent build instead"
+            BUILD_ID=$(echo "$BUILDS" | jq -r '.[0].id // empty')
+          fi
+
+          echo "Selected build ID: $BUILD_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
       - name: Download Android build
         if: success()
