@@ -90,7 +90,7 @@ jobs:
 
           # Use a simpler approach - don't filter by status at first
           echo "Getting most recent build ID..."
-          LATEST_BUILD=$(bunx eas build:list --platform=android --json --limit=1 || echo '[]')
+          LATEST_BUILD=$(bunx eas build:list --platform=android --json --non-interactive --limit=1 || echo '[]')
           echo "Latest build output: $LATEST_BUILD"
 
           BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id // empty')
@@ -152,8 +152,8 @@ jobs:
             ATTEMPT=$((ATTEMPT+1))
             echo "Attempt $ATTEMPT to find our build..."
             
-            # Get recent builds
-            BUILDS=$(bunx eas build:list --platform=android --json --limit=5 || echo '[]')
+            # Get recent builds - ADDED --non-interactive flag
+            BUILDS=$(bunx eas build:list --platform=android --json --non-interactive --limit=5 || echo '[]')
             
             # Try to find a build for our commit
             BUILD_ID=$(echo "$BUILDS" | jq -r --arg COMMIT "$CURRENT_COMMIT" '.[] | select(.git.commit == $COMMIT) | .id' | head -1)
@@ -166,15 +166,6 @@ jobs:
             echo "No build found for our commit yet, waiting 30 seconds..."
             sleep 30
           done
-
-          # Fallback to most recent build if we couldn't find one for our commit
-          if [ -z "$BUILD_ID" ]; then
-            echo "Couldn't find build for our commit, using most recent build instead"
-            BUILD_ID=$(echo "$BUILDS" | jq -r '.[0].id // empty')
-          fi
-
-          echo "Selected build ID: $BUILD_ID"
-          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
       - name: Download Android build
         if: success()
