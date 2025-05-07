@@ -34,6 +34,25 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Configure EAS project
+        run: |
+          # Add owner to app.json
+          if [ -f "app.json" ]; then
+             if grep -q "owner" app.json; then
+             echo "Owner field already exists in app.json"
+             else
+              # Use temp file approach for more reliability
+             jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
+             echo "Added owner to app.json"
+             fi
+
+              # Show the updated config
+              cat app.json | grep -A 5 "expo"
+           else
+            echo "app.json not found, running eas init"
+            echo "y" | bunx eas init --non-interactive
+          fi
+
       - name: Build Android app
         run: bunx eas build --platform android --profile preview --non-interactive --no-wait
       # Optional: Also build for iOS if you need it

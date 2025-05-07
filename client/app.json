@@ -4,6 +4,7 @@
     "slug": "chit-chat",
     "version": "1.0.0",
     "orientation": "portrait",
+    "owner": "naushadraien",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
