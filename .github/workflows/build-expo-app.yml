@@ -1,61 +1,155 @@
-name: Build & Download Expo APK
+name: Build Expo App
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main # or whatever your production branch is
+    paths:
+      - "client/**" # Only trigger on changes to client code
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
-  build-apk:
+  build-expo-app:
+    name: Build Mobile App
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./client # Set working directory to client folder
     steps:
-      - name: 🧾 Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: 🔧 Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
 
-      - name: 📦 Install Dependencies
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_ACCESS_TOKEN }}
+
+      - name: Install dependencies
         run: bun install
 
-      - name: 🚀 Install EAS CLI
-        run: bun add -g eas-cli
-
-      - name: 🔐 Login to Expo
-        run: eas login --access-token ${{ secrets.EXPO_ACCESS_TOKEN }}
-
-      - name: 🏗 Start APK Build
-        run: eas build --platform android --non-interactive --profile android --json > build-result.json
-
-      - name: ⏳ Wait for Build & Get APK URL
-        id: wait_and_get_url
+      - name: Configure EAS project
         run: |
-          BUILD_ID=$(jq -r '.builds.android.buildId' build-result.json)
-          echo "Build ID: $BUILD_ID"
+          # Add owner to app.json
+          if [ -f "app.json" ]; then
+             if grep -q "owner" app.json; then
+             echo "Owner field already exists in app.json"
+             else
+              # Use temp file approach for more reliability
+             jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
+             echo "Added owner to app.json"
+             fi
 
-          STATUS=""
-          until [[ "$STATUS" == "finished" || "$STATUS" == "errored" ]]; do
-            STATUS=$(eas build:status --json | jq -r '.builds[0].status')
-            echo "Status: $STATUS"
-            sleep 15
-          done
+              # Show the updated config
+              cat app.json | grep -A 5 "expo"
+           else
+            echo "app.json not found, running eas init"
+            echo "y" | bunx eas init --non-interactive
+          fi
 
-          if [ "$STATUS" == "finished" ]; then
-            APK_URL=$(eas build:status --json | jq -r '.builds[0].artifacts.buildUrl')
-            echo "✅ APK URL: $APK_URL"
-            echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Build failed"
+      - name: Configure eas.json for CI
+        run: |
+          cat > eas.json << EOF
+          {
+            "cli": {
+              "version": ">= 3.13.3"
+            },
+            "build": {
+              "preview": {
+                "distribution": "internal",
+                "android": {
+                  "buildType": "apk",
+                  "withoutCredentials": true
+                }
+              }
+            }
+          }
+          EOF
+          echo "Created eas.json for CI build"
+          cat eas.json
+
+      - name: Build Android app
+        run: bunx eas build --platform android --profile preview --non-interactive --no-wait
+      # Optional: Also build for iOS if you need it
+      # - name: Build iOS app
+      #   run: npx eas build --platform ios --profile preview --non-interactive --no-wait
+
+      - name: Wait for build to complete
+        run: |
+          echo "Waiting for build to complete..."
+
+          # Debug output - see what the actual command returns
+          echo "Checking build list..."
+          bunx eas build:list --platform=android || echo "Command failed but continuing"
+
+          # Use a simpler approach - don't filter by status at first
+          echo "Getting most recent build ID..."
+          LATEST_BUILD=$(bunx eas build:list --platform=android --json --non-interactive --limit=1 2>/dev/null || echo '[]')
+          echo "Latest build output: $LATEST_BUILD"
+
+          BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id // empty')
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "No builds found. There might be an issue with the build submission."
             exit 1
           fi
 
-      - name: 📥 Download APK
-        run: |
-          curl -L "${{ steps.wait_and_get_url.outputs.apk_url }}" -o app.apk
+          echo "Found build ID: $BUILD_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
 
-      - name: 📤 Upload APK as Artifact
-        uses: actions/upload-artifact@v3
+          # Now monitor this specific build until it completes
+          echo "Monitoring build status..."
+          TIMEOUT=60 # minutes
+          ELAPSED=0
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            # Get status of this specific build - CORRECTED COMMAND WITH ERROR HANDLING
+            echo "Checking status for build $BUILD_ID..."
+            BUILD_STATUS=$(bunx eas build:list --json --non-interactive --limit=100 2>/dev/null || echo '[]')
+            
+            # Debug output to see what we're getting
+            echo "Build status check returned data of length: $(echo "$BUILD_STATUS" | wc -c) bytes"
+            
+            # Validate JSON before trying to parse it
+            if echo "$BUILD_STATUS" | jq . >/dev/null 2>&1; then
+              STATUS=$(echo "$BUILD_STATUS" | jq -r --arg ID "$BUILD_ID" '.[] | select(.id == $ID) | .status // "unknown"' | tr '[:upper:]' '[:lower:]')
+            else
+              echo "Warning: Invalid JSON returned, trying basic command"
+              # Try a simpler approach without JSON parsing
+              PLAIN_STATUS=$(bunx eas build:list --id="$BUILD_ID" 2>/dev/null | grep -i status | head -1 || echo "Status: unknown")
+              STATUS=$(echo "$PLAIN_STATUS" | grep -o "Status:.*" | sed 's/Status: *//i' | tr '[:upper:]' '[:lower:]')
+            fi
+            
+            echo "Build status: $STATUS"
+            
+            if [ "$STATUS" = "finished" ]; then
+              echo "Build completed successfully!"
+              break
+            elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
+              echo "Build failed or was canceled"
+              exit 1
+            elif [ "$STATUS" = "unknown" ]; then
+              echo "Could not determine build status, will try again..."
+            fi
+            
+            echo "Waiting for build to complete... ($ELAPSED/$TIMEOUT minutes)"
+            sleep 60
+            ELAPSED=$((ELAPSED+1))
+          done
+      - name: Download Android build
+        if: success()
+        run: bunx eas build:download --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
+
+      - name: Upload APK as artifact
+        if: success()
+        uses: actions/upload-artifact@v4
         with:
-          name: expo-apk
-          path: app.apk
+          name: ChitChat-APK
+          path: ./client/ChitChat.apk
+          retention-days: 14
