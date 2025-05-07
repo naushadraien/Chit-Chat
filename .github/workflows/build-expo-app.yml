@@ -105,15 +105,15 @@ jobs:
 
           # Now monitor this specific build until it completes
           echo "Monitoring build status..."
-          TIMEOUT=60 # minutes
+          TIMEOUT=30 # minutes
           ELAPSED=0
 
           while [ $ELAPSED -lt $TIMEOUT ]; do
             # Use build:view command instead of list (more reliable)
             echo "Checking status for build $BUILD_ID..."
             
-            # Get build status using view command
-            BUILD_VIEW_OUTPUT=$(bunx eas build:view $BUILD_ID --non-interactive 2>/dev/null || echo "Failed to get build status")
+            # Get build status using view command - REMOVED --non-interactive flag
+            BUILD_VIEW_OUTPUT=$(bunx eas build:view $BUILD_ID 2>/dev/null || echo "Failed to get build status")
             
             # Print some of the output for debugging
             echo "Build view output (first few lines):"
