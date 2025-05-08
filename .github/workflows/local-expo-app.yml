@@ -12,6 +12,9 @@ jobs:
   build-local-android:
     name: Build Android App Locally
     runs-on: ubuntu-latest
+    # Add permissions here
+    permissions:
+      contents: write # Required to create a GitHub Release
     defaults:
       run:
         working-directory: ./client
@@ -39,23 +42,20 @@ jobs:
         with:
           expo-version: latest
           eas-version: latest
-          token: ${{ secrets.EXPO_ACCESS_TOKEN }} # Provide the token here
+          token: ${{ secrets.EXPO_ACCESS_TOKEN }}
 
       - name: Install dependencies
         run: bun install
 
       - name: Configure app.json (Ensure owner is present)
         run: |
-          # Add owner if not present. Replace 'your-expo-username' with your actual Expo username.
-          # This is often needed by EAS CLI to associate the project, even for local builds.
           if [ -f "app.json" ]; then
             if ! jq -e '.expo.owner' app.json > /dev/null; then
-              jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json # Use your actual Expo username
+              jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
               echo "Added owner to app.json for local build"
             else
               echo "Owner field already exists in app.json."
             fi
-            # You can add other app.json modifications here if needed for the build
             echo "Current app.json:"
             cat app.json
           else
@@ -88,7 +88,6 @@ jobs:
         id: local_build
         run: |
           echo "Starting local Android build..."
-          # The profile name 'local_build_profile' must match what's in your eas.json
           bunx eas build --platform android --profile local_build_profile --local --output ./ChitChat.apk
           echo "Local build finished."
           if [ -f "./ChitChat.apk" ]; then
@@ -99,7 +98,7 @@ jobs:
             exit 1
           fi
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }} # Crucial for non-interactive local builds
+          EXPO_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
 
       - name: Upload APK as artifact
         if: success()
@@ -122,7 +121,7 @@ jobs:
             Build Number: ${{ github.run_number }}
             Commit: ${{ github.sha }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is for GitHub Release, not Expo
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Echo Release Download URL
         if: success() && steps.gh_release.outputs.url != '' && github.ref == 'refs/heads/main'
