@@ -1,4 +1,4 @@
-name: Build Expo App Locally
+name: Build Expo App
 
 on:
   push:
@@ -9,13 +9,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-local-android:
-    name: Build Android App Locally
+  build-expo-app:
+    name: Build Mobile App
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./client
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,109 +24,189 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "17"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Expo and EAS CLI
+      - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
           eas-version: latest
-          token: ${{ secrets.EXPO_ACCESS_TOKEN }} # Provide the token here
+          token: ${{ secrets.EXPO_ACCESS_TOKEN }}
 
       - name: Install dependencies
         run: bun install
 
-      - name: Configure app.json (Ensure owner is present)
+      - name: Configure EAS project
         run: |
-          # Add owner if not present. Replace 'your-expo-username' with your actual Expo username.
-          # This is often needed by EAS CLI to associate the project, even for local builds.
-          if [ -f "app.json" ]; then
-            if ! jq -e '.expo.owner' app.json > /dev/null; then
-              jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json # Use your actual Expo username
-              echo "Added owner to app.json for local build"
-            else
-              echo "Owner field already exists in app.json."
-            fi
-            # You can add other app.json modifications here if needed for the build
-            echo "Current app.json:"
-            cat app.json
-          else
-            echo "ERROR: app.json not found in ./client directory!"
-            exit 1
+          # Set default backend URL if not provided in secrets
+          BACKEND_URL="${{ secrets.EXPO_PUBLIC_BACKEND_URL }}"
+          if [ -z "$BACKEND_URL" ]; then
+            BACKEND_URL="http://localhost:4000/api/v1" # Consider if a more useful default or error is needed if secret is missing
           fi
 
-      - name: Configure eas.json for Local Build
+          APP_JSON_EXISTS=false
+          if [ -f "app.json" ]; then
+            APP_JSON_EXISTS=true
+            echo "app.json found."
+          else
+            echo "app.json not found, running eas init..."
+            echo "y" | bunx eas init --non-interactive
+            if [ -f "app.json" ]; then
+              APP_JSON_EXISTS=true
+              echo "app.json created by eas init."
+            else
+              echo "ERROR: eas init failed to create app.json"
+              exit 1
+            fi
+          fi
+
+          if [ "$APP_JSON_EXISTS" = true ]; then
+            echo "Configuring app.json..."
+            # Add owner if not present
+            if ! jq -e '.expo.owner' app.json > /dev/null; then
+              jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
+              echo "Added owner to app.json"
+            else
+              echo "Owner field already exists or was set by eas init."
+            fi
+
+            # Add/update backend URL
+            # Ensure .expo.extra path exists
+            if ! jq -e '.expo.extra' app.json > /dev/null; then
+              jq '.expo.extra = {}' app.json > app.json.tmp && mv app.json.tmp app.json
+            fi
+            jq ".expo.extra.backendUrl = \"$BACKEND_URL\"" app.json > app.json.tmp && mv app.json.tmp app.json
+            echo "Set backend URL in app.json: $BACKEND_URL"
+            echo "Current app.json content:"
+            cat app.json
+          fi
+
+      - name: Configure eas.json for CI
         run: |
           cat > eas.json << EOF
           {
             "cli": {
-              "version": ">= 5.9.0"
+              "version": ">= 3.13.3",
+              "appVersionSource": "remote"
             },
             "build": {
-              "local_build_profile": {
+              "preview": {
                 "distribution": "internal",
                 "android": {
                   "buildType": "apk",
                   "withoutCredentials": true
-                },
-                "env": {}
+                }
               }
             }
           }
           EOF
-          echo "Created/Updated eas.json for local build profile 'local_build_profile'"
+          echo "Created eas.json for CI build"
 
-      - name: Build Android app locally
-        id: local_build
+      - name: Build Android app
+        id: build-app
         run: |
-          echo "Starting local Android build..."
-          # The profile name 'local_build_profile' must match what's in your eas.json
-          bunx eas build --platform android --profile local_build_profile --local --output ./ChitChat.apk
-          echo "Local build finished."
-          if [ -f "./ChitChat.apk" ]; then
-            echo "APK successfully created at ./ChitChat.apk"
-            ls -l ./ChitChat.apk
-          else
-            echo "ERROR: APK file ./ChitChat.apk not found after build!"
+          # Submit the build and grab the build ID from the output
+          BUILD_OUTPUT=$(bunx eas build --platform android --profile preview --non-interactive --no-wait)
+          echo "$BUILD_OUTPUT"
+
+          # Extract the build ID using regex pattern matching
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -o -E '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "Failed to extract build ID from output. Trying to get it from the build list..."
+            sleep 10
+            
+            # Fallback: Get the latest build ID from the build list
+            LATEST_BUILD=$(bunx eas build:list --platform=android --json --non-interactive --limit=1)
+            BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id')
+          fi
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "No build ID found. Exiting."
             exit 1
           fi
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }} # Crucial for non-interactive local builds
+
+          echo "Using build ID: $BUILD_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+
+      - name: Monitor build status
+        run: |
+          TIMEOUT=150  # minutes (Increased from 60 to 150 for 2h 30m)
+           ELAPSED=0
+           POLL_INTERVAL=60  # seconds
+
+           echo "Monitoring build with ID: ${{ env.BUILD_ID }}"
+
+           while [ $ELAPSED -lt $TIMEOUT ]; do
+             echo "Checking build status (attempt $((ELAPSED+1))/$TIMEOUT)..."
+             
+             # Get current build list
+             BUILD_LIST=$(bunx eas build:list)
+             
+             # Extract our build info by getting lines around our build ID
+             BUILD_INFO=$(echo "$BUILD_LIST" | grep -A 10 "${{ env.BUILD_ID }}" | head -15)
+             echo "Build info:"
+             echo "$BUILD_INFO"
+             
+             # Check for status
+             if echo "$BUILD_INFO" | grep -q "Status"; then
+               # Extract status - this pulls out just the word after Status:
+               STATUS=$(echo "$BUILD_INFO" | grep -i "Status" | sed -E 's/.*Status[[:space:]]*([a-zA-Z]+).*/\1/' | tr '[:upper:]' '[:lower:]')
+               echo "Build status: $STATUS"
+               
+               if [ "$STATUS" = "finished" ]; then
+                 echo "Build completed successfully!"
+                 break
+               elif [ "$STATUS" = "errored" ] || [ "$STATUS" = "canceled" ]; then
+                 echo "Build failed or was canceled"
+                 exit 1
+               else
+                 echo "Build still in progress (status: $STATUS)"
+               fi
+             else
+               echo "Could not find status in build info"
+             fi
+             
+             echo "Waiting for next check... ($ELAPSED/$TIMEOUT minutes)"
+             sleep $POLL_INTERVAL
+             ELAPSED=$((ELAPSED+1))
+           done
+
+           if [ $ELAPSED -ge $TIMEOUT ]; then
+             echo "Timed out waiting for build to complete after $TIMEOUT minutes"
+             exit 1
+           fi
+
+      - name: Download Android build
+        if: success()
+        run: |
+          echo "Downloading build with ID: ${{ env.BUILD_ID }}"
+          bunx eas build:download --non-interactive --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
+
+          if [ -f "./ChitChat.apk" ]; then
+            echo "APK downloaded successfully"
+            ls -la ./ChitChat.apk
+          else
+            echo "Failed to download APK"
+            exit 1
+          fi
 
       - name: Upload APK as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ChitChat-Local-APK
+          name: ChitChat-APK
           path: ./client/ChitChat.apk
-          retention-days: 7
+          retention-days: 14
 
-      - name: Create GitHub Release with APK
+      - name: Create GitHub Release
         if: success() && github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        id: gh_release
+        uses: softprops/action-gh-release@v1
         with:
           files: ./client/ChitChat.apk
-          name: ChitChat Local Build v${{ github.run_number }}
-          tag_name: local-v${{ github.run_number }}
+          name: ChitChat v${{ github.run_number }}
+          tag_name: v${{ github.run_number }}
           body: |
-            Locally built ChitChat Mobile App (Android APK)
-            Build Number: ${{ github.run_number }}
-            Commit: ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is for GitHub Release, not Expo
+            ChitChat Mobile App Build ${{ github.run_number }}
 
-      - name: Echo Release Download URL
-        if: success() && steps.gh_release.outputs.url != '' && github.ref == 'refs/heads/main'
-        run: |
-          echo "---------------------------------------------------------------------"
-          echo "APK available for download at the GitHub Release page:"
-          echo "${{ steps.gh_release.outputs.html_url }}"
-          echo "---------------------------------------------------------------------"
+            Built from commit: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

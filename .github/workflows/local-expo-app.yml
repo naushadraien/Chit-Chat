@@ -3,7 +3,7 @@ name: Build Expo App Locally
 on:
   push:
     branches:
-      - main # Or any other branch you want to build from
+      - main
     paths:
       - "client/**"
   workflow_dispatch:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./client # Assuming your Expo app is in the 'client' directory
+        working-directory: ./client
 
     steps:
       - name: Checkout repository
@@ -39,22 +39,29 @@ jobs:
         with:
           expo-version: latest
           eas-version: latest
+          token: ${{ secrets.EXPO_ACCESS_TOKEN }} # Provide the token here
 
       - name: Install dependencies
         run: bun install
 
-      - name: Configure app.json (Optional)
+      - name: Configure app.json (Ensure owner is present)
         run: |
-          # Add owner if not present (sometimes required by EAS CLI even for local builds)
-          # Replace 'your-expo-username' with your actual Expo username or a placeholder.
-          # This step might only be needed if eas build --local complains.
-          if [ -f "app.json" ] && ! jq -e '.expo.owner' app.json > /dev/null; then
-            jq '.expo.owner = "your-expo-username"' app.json > app.json.tmp && mv app.json.tmp app.json
-            echo "Added dummy owner to app.json for local build"
+          # Add owner if not present. Replace 'your-expo-username' with your actual Expo username.
+          # This is often needed by EAS CLI to associate the project, even for local builds.
+          if [ -f "app.json" ]; then
+            if ! jq -e '.expo.owner' app.json > /dev/null; then
+              jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json # Use your actual Expo username
+              echo "Added owner to app.json for local build"
+            else
+              echo "Owner field already exists in app.json."
+            fi
+            # You can add other app.json modifications here if needed for the build
+            echo "Current app.json:"
+            cat app.json
+          else
+            echo "ERROR: app.json not found in ./client directory!"
+            exit 1
           fi
-          # You can add other app.json modifications here if needed for the build
-          echo "Current app.json:"
-          cat app.json || echo "app.json not found or unreadable"
 
       - name: Configure eas.json for Local Build
         run: |
@@ -78,11 +85,10 @@ jobs:
           echo "Created/Updated eas.json for local build profile 'local_build_profile'"
 
       - name: Build Android app locally
-        id: local_build # Give an id to this step to access its outputs if needed
+        id: local_build
         run: |
           echo "Starting local Android build..."
           # The profile name 'local_build_profile' must match what's in your eas.json
-          # The output path should be relative to the working-directory (./client)
           bunx eas build --platform android --profile local_build_profile --local --output ./ChitChat.apk
           echo "Local build finished."
           if [ -f "./ChitChat.apk" ]; then
@@ -92,29 +98,31 @@ jobs:
             echo "ERROR: APK file ./ChitChat.apk not found after build!"
             exit 1
           fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }} # Crucial for non-interactive local builds
 
       - name: Upload APK as artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ChitChat-Local-APK
-          path: ./client/ChitChat.apk # Path to the APK from the root of the repo
+          path: ./client/ChitChat.apk
           retention-days: 7
 
       - name: Create GitHub Release with APK
-        if: success() && github.ref == 'refs/heads/main' # Example: only for main branch builds
+        if: success() && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         id: gh_release
         with:
-          files: ./client/ChitChat.apk # Path to the APK from the root of the repo
+          files: ./client/ChitChat.apk
           name: ChitChat Local Build v${{ github.run_number }}
-          tag_name: local-v${{ github.run_number }} # Creates a new tag for each release
+          tag_name: local-v${{ github.run_number }}
           body: |
             Locally built ChitChat Mobile App (Android APK)
             Build Number: ${{ github.run_number }}
             Commit: ${{ github.sha }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is for GitHub Release, not Expo
 
       - name: Echo Release Download URL
         if: success() && steps.gh_release.outputs.url != '' && github.ref == 'refs/heads/main'
@@ -123,6 +131,3 @@ jobs:
           echo "APK available for download at the GitHub Release page:"
           echo "${{ steps.gh_release.outputs.html_url }}"
           echo "---------------------------------------------------------------------"
-          echo "Direct download link for ChitChat.apk (may vary slightly based on release assets):"
-          echo "${{ steps.gh_release.outputs.html_url }}/download/ChitChat.apk"
-          echo "Or check the assets section of the release page."
