@@ -49,6 +49,7 @@ jobs:
 
       - name: Configure app.json (Ensure owner is present)
         run: |
+          BACKEND_URL="${{ secrets.EXPO_PUBLIC_BACKEND_URL }}"
           if [ -f "app.json" ]; then
             if ! jq -e '.expo.owner' app.json > /dev/null; then
               jq '.expo.owner = "naushadraien"' app.json > app.json.tmp && mv app.json.tmp app.json
@@ -56,6 +57,16 @@ jobs:
             else
               echo "Owner field already exists in app.json."
             fi
+
+             # Add/update backend URL
+            # Ensure .expo.extra path exists
+            if ! jq -e '.expo.extra' app.json > /dev/null; then
+              jq '.expo.extra = {}' app.json > app.json.tmp && mv app.json.tmp app.json
+              echo "Created .expo.extra object in app.json"
+            fi
+            jq ".expo.extra.backendUrl = \"$BACKEND_URL\"" app.json > app.json.tmp && mv app.json.tmp app.json
+            echo "Set backend URL in app.json: $BACKEND_URL"
+            
             echo "Current app.json:"
             cat app.json
           else

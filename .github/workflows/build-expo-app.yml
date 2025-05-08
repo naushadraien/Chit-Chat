@@ -179,7 +179,7 @@ jobs:
         if: success()
         run: |
           echo "Downloading build with ID: ${{ env.BUILD_ID }}"
-          bunx eas build:download --non-interactive --build-id ${{ env.BUILD_ID }} --output ./ChitChat.apk
+          bunx eas build:download --non-interactive --id ${{ env.BUILD_ID }} --output ./ChitChat.apk
 
           if [ -f "./ChitChat.apk" ]; then
             echo "APK downloaded successfully"
