@@ -1,21 +1,24 @@
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { appCreate } from './app.create';
 import { AppModule } from './app.module';
-import { corsOptions } from './config/corsOptions';
-import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     bufferLogs: true,
   });
-  app.enableCors(corsOptions);
-  app.setGlobalPrefix('api/v1');
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-    }),
-  );
-  await app.listen(process.env.PORT ?? 3000);
+
+  appCreate(app);
+
+  const configService = app.get(ConfigService);
+  const port = configService.getOrThrow('PORT');
+  await app.listen(port);
+
+  logger.log(`🚀 Application is running on: http://localhost:${port}`);
+  logger.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
 }
 bootstrap();

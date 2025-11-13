@@ -22,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // Ignore expiration is set to false to ensure the token expiration is checked
       ignoreExpiration: false,
       // Use the secret key from the injected configuration for verifying the JWT
-      secretOrKey: jwtConfiguration.secret, //passport-jwt will decrypt the access token coming from the request header using this secret key and will give you the payload object
+      secretOrKey: jwtConfiguration.secret as string, //passport-jwt will decrypt the access token coming from the request header using this secret key and will give you the payload object
     });
   }
 

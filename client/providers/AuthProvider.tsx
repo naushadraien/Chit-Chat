@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           setUserDetails(userData);
         }
       } catch (error) {
-        console.error("Failed to load authentication data:", error);
+        console.log("Failed to load authentication data:", error);
         // Reset auth state on error as a precaution
         setAuthState({ authenticated: false, token: "" });
         setUserDetails(null);
@@ -147,7 +147,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         refreshToken();
       }
     } catch (error) {
-      console.error("Error scheduling token refresh:", error);
+      console.log("Error scheduling token refresh:", error);
     }
   }, []);
 
@@ -197,7 +197,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       return response.accessToken;
     } catch (error) {
-      console.error("Token refresh failed:", error);
+      console.log("Token refresh failed:", error);
       // Handle token refresh failure by logging out
       handleLogout();
       throw error;
@@ -238,7 +238,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         text1: "Login successful!",
       });
     } catch (error) {
-      console.error("Error saving auth data:", error);
+      console.log("Error saving auth data:", error);
       showToast({
         type: "error",
         text1: "Login succeeded but failed to save session",
@@ -279,7 +279,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         text1: "You've been logged out",
       });
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.log("Error during logout:", error);
       showToast({
         type: "error",
         text1: "Failed to log out properly",
@@ -303,7 +303,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     },
     onSuccess: handleLoginSuccess,
     onError: (error) => {
-      console.error("Login failed:", error);
+      console.log("Login failed:", error);
       // Toast is already shown by requestAPI
     },
   });

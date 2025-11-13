@@ -1,18 +1,21 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { DatabaseModule } from './database/database.module';
 import { RequestLoggerMiddleware } from './middlewares/request-logger.middleware';
 import { UserModule } from './user/user.module';
+import { validateConfig } from './validation/env.validation';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGO_URI, {
-      dbName: 'react-native-chat',
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+      validate: validateConfig,
     }),
+    DatabaseModule,
     AuthModule,
     UserModule,
   ],

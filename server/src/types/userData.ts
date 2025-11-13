@@ -1,3 +1,3 @@
-import { User } from 'src/schemas/user.schema';
+import { User } from 'src/database/schemas/user.schema';
 
 export type UserData = User & { id: string };

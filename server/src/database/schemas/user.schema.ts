@@ -13,7 +13,7 @@ export interface VerificationStatus {
   //transformation below is for sending the sufficient data in the response of api request from frontend
   toJSON: {
     virtuals: true,
-    transform: (doc, ret) => {
+    transform: (doc, ret: any) => {
       ret.id = ret._id;
       delete ret._id;
       delete ret.__v;
@@ -26,7 +26,7 @@ export interface VerificationStatus {
   },
   toObject: {
     virtuals: true,
-    transform: (doc, ret) => {
+    transform: (doc, ret: any) => {
       ret.id = ret._id;
       delete ret._id;
       delete ret.__v;
