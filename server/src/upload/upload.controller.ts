@@ -12,7 +12,9 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { CloudinaryResult } from './type';
 import { UploadService } from './upload.service';
 import { ValidateFile } from 'src/common/decorators/file-upload.decorator';
+import { ApiExcludeController } from '@nestjs/swagger';
 
+@ApiExcludeController()
 @Controller('upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}

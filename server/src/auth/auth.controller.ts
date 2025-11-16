@@ -3,7 +3,9 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpStatus,
   Inject,
+  Ip,
   Post,
   Request,
   Res,
@@ -21,11 +23,15 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { GoogleOAuthGuard } from './guards/google-oauth/google-oauth.guard';
 import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
 import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
+import { DeviceInfo } from 'src/database/schemas/session.schema';
+import { LogoutDto } from './dto/logout.dto';
+import { SessionService } from 'src/session/session.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly sessionService: SessionService,
 
     @Inject(frontendConfig.KEY)
     private readonly frontendConfiguration: ConfigType<typeof frontendConfig>,
@@ -43,11 +49,11 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard) // this is the local strategy guard which is used to authenticate the user using email and password
   @Post('signin')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   login(
     @Request()
     req: {
-      user: UserData;
+      user: UserData & { deviceInfo: DeviceInfo }; // Contains both user and deviceInfo from strategy
     },
   ) {
     return this.authService.login(req.user);
@@ -56,8 +62,14 @@ export class AuthController {
   @Public()
   @UseGuards(RefreshAuthGuard) // this is the refresh token strategy guard which is used to authenticate the user using refresh token and get a new access token
   @Post('refresh')
-  refresh(@Request() req) {
-    return this.authService.refresh(req.user.id, req.user.name);
+  refresh(@Request() req: any) {
+    const { user, deviceId } = req.user;
+    return this.authService.refresh(
+      user.id,
+      user.name,
+      deviceId,
+      user.sessionId,
+    );
   }
 
   @Public()
@@ -70,17 +82,27 @@ export class AuthController {
   @Get('google/callback')
   async googleCallback(
     @Request()
-    req: {
-      user: UserData;
-    },
+    req: any,
+    @Ip() ipAddress: string,
     @Res() res: Response,
   ) {
-    console.log('🚀 ~ AuthController ~ googleCallback ~ req:', req.user);
+    // For Google OAuth, create device info from request
+    const deviceInfo = {
+      deviceId: 'web-' + Date.now(), // Generate web device ID
+      deviceType: 'web',
+      browser: req.headers['user-agent']?.split(' ')[0] || 'Unknown',
+      ipAddress: ipAddress || req.ip,
+      userAgent: req.headers['user-agent'] || '',
+    };
 
-    const response = await this.authService.login(req.user);
+    const response = await this.authService.login({
+      ...req.user,
+      deviceInfo: deviceInfo,
+    });
     const params = new URLSearchParams();
     params.append('accessToken', response.accessToken);
     params.append('refreshToken', response.refreshToken);
+    params.append('sessionId', response.sessionId);
     params.append('userId', response.id.toString());
 
     console.log('url of frontend', this.frontendConfiguration.frontendURL);
@@ -103,8 +125,35 @@ export class AuthController {
         id: string;
       };
     },
+    @Body() logoutDto?: LogoutDto,
   ) {
-    return this.authService.logOut(req.user.id);
+    return this.authService.logOut(req.user.id, logoutDto?.sessionId);
+  }
+
+  @Get('sessions')
+  async getActiveSessions(@Request() req: { user: { id: string } }) {
+    const sessions = await this.sessionService.getActiveSessions(req.user.id);
+    return { sessions };
+  }
+
+  @Post('logout-others')
+  @HttpCode(HttpStatus.OK)
+  async logoutOthers(
+    @Request() req: { user: { id: string } },
+    @Body('currentSessionId') currentSessionId: string,
+  ) {
+    const count = await this.sessionService.revokeAllSessionsExceptCurrent(
+      req.user.id,
+      currentSessionId,
+    );
+    return { message: `Logged out from ${count} other session(s)` };
+  }
+
+  @Post('logout-all')
+  @HttpCode(HttpStatus.OK)
+  async logoutAll(@Request() req: { user: { id: string } }) {
+    const count = await this.sessionService.revokeAllSessions(req.user.id);
+    return { message: `Logged out from all ${count} session(s)` };
   }
 
   @Post('send-otp')

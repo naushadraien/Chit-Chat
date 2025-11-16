@@ -11,7 +11,9 @@ export const authApi = {
       url: "/auth/signin",
     };
   },
-  signUp: (data: RegisterFormData): ApiRequestConfig => {
+  signUp: (
+    data: Omit<RegisterFormData, "confirmPassword">
+  ): ApiRequestConfig => {
     return {
       method: "post",
       data,

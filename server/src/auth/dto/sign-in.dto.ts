@@ -1,31 +1,15 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Matches,
+  ValidateNested,
 } from 'class-validator';
+import { DeviceInfoDto } from './device-info.dto';
 
-export class CreateUserDto {
-  @ApiPropertyOptional({
-    description: 'First name of the user',
-    example: 'John',
-    type: String,
-  })
-  @IsOptional()
-  @IsString()
-  firstName?: string;
-
-  @ApiPropertyOptional({
-    description: 'Last name of the user',
-    example: 'John',
-    type: String,
-  })
-  @IsOptional()
-  @IsNotEmpty()
-  lastName?: string;
-
+export class SignInDto {
   @ApiProperty({
     description: 'The email address of the user',
     example: 'john.doe@example.com',
@@ -58,12 +42,7 @@ export class CreateUserDto {
   )
   password: string;
 
-  @ApiPropertyOptional({
-    description: 'Phone number of the user',
-    example: '+977 9814864833',
-    type: String,
-  })
-  @IsOptional()
-  @IsNotEmpty()
-  phoneNumber?: string;
+  @ValidateNested()
+  @Type(() => DeviceInfoDto)
+  deviceInfo: DeviceInfoDto;
 }

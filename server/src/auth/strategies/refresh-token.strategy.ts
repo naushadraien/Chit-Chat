@@ -28,11 +28,12 @@ export class RefreshTokenStrategy extends PassportStrategy(
 
   async validate(req: Request, payload: AuthJWTPayload) {
     const userId = payload.sub;
-    const { refreshToken } = req.body; // this is done for invalidating or revoking the refresh token when the user logs out
+    const { refreshToken, deviceId } = req.body; // this is done for invalidating or revoking the refresh token when the user logs out
     const user = await this.authService.validateRefreshToken(
       userId,
       refreshToken,
+      deviceId,
     ); //this returned userId object will be attached to the request object so that you can access it in the protected routes by using like   async login(@Request() req) {return req.user.id;}
-    return user;
+    return { user, deviceId };
   }
 }

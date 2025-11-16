@@ -7,6 +7,9 @@ import { DatabaseModule } from './database/database.module';
 import { RequestLoggerMiddleware } from './middlewares/request-logger.middleware';
 import { UserModule } from './user/user.module';
 import { validateConfig } from './validation/env.validation';
+import { SessionModule } from './session/session.module';
+import { APP_FILTER } from '@nestjs/core';
+import { AllExceptionsFilter } from './common/filters/all-exception-filter';
 
 @Module({
   imports: [
@@ -18,9 +21,16 @@ import { validateConfig } from './validation/env.validation';
     DatabaseModule,
     AuthModule,
     UserModule,
+    SessionModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

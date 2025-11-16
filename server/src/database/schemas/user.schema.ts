@@ -20,7 +20,6 @@ export interface VerificationStatus {
       delete ret.otp;
       delete ret.otpExpiresAt;
       delete ret.password;
-      delete ret.hashedRefreshToken;
       return ret;
     },
   },
@@ -33,7 +32,6 @@ export interface VerificationStatus {
       delete ret.otp;
       delete ret.otpExpiresAt;
       delete ret.password;
-      delete ret.hashedRefreshToken;
       return ret;
     },
   },
@@ -50,9 +48,6 @@ export class User {
 
   @Prop({ required: true })
   password: string;
-
-  @Prop({ default: null })
-  hashedRefreshToken: string;
 
   @Prop({ default: null })
   avatar: string;

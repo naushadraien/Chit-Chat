@@ -3,14 +3,15 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import refreshConfig from 'src/config/refresh.config';
+import { DeviceInfo } from 'src/database/schemas/session.schema';
 import { EmailService } from 'src/email/email.service';
+import { SessionService } from 'src/session/session.service';
 import { UserData } from 'src/types/userData';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
@@ -25,9 +26,10 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly sessionService: SessionService,
 
     @Inject(refreshConfig.KEY) // Inject the refresh token configuration using the ConfigService
-    private refreshTokenConfiguration: ConfigType<typeof refreshConfig>,
+    private refreshTokenConfig: ConfigType<typeof refreshConfig>,
   ) {}
   async registerUser(createUserDto: CreateUserDto) {
     const existedUser = await this.userService.findByEmail(createUserDto.email);
@@ -45,28 +47,74 @@ export class AuthService {
     return user.toObject() as UserData;
   }
 
-  async login(user: UserData) {
-    const { id: userId, ...rest } = user;
-    const { accessToken, refreshToken } = await this.generateTokens(userId);
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    await this.userService.updateHashedRefreshToken(userId, hashedRefreshToken);
+  async login(userData: UserData & { deviceInfo: DeviceInfo }) {
+    const { deviceInfo, ...user } = userData;
+
+    // Generate tokens with device info
+    const tokens = await this.generateTokens(user.id, deviceInfo);
+
     return {
-      id: userId,
-      accessToken,
-      refreshToken,
-      ...rest,
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      ...tokens,
     };
   }
 
-  async generateTokens(userId: string) {
+  async generateTokens(userId: string, deviceInfo: DeviceInfo) {
     const payload: AuthJWTPayload = { sub: userId };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
-      this.jwtService.signAsync(payload, this.refreshTokenConfiguration),
+      this.jwtService.signAsync(payload, this.refreshTokenConfig),
     ]);
+
+    const expiresAt = new Date();
+    const expiresInMs = this.parseExpiresIn(
+      this.refreshTokenConfig.expiresIn as string,
+    );
+    expiresAt.setTime(expiresAt.getTime() + expiresInMs);
+
+    // Create session
+    const session = await this.sessionService.createSession(
+      userId,
+      refreshToken,
+      deviceInfo,
+      expiresAt,
+    );
+
     return {
       accessToken,
       refreshToken,
+      sessionId: session.id,
+    };
+  }
+
+  async validateRefreshToken(
+    userId: string,
+    refreshToken: string,
+    deviceId: string,
+  ) {
+    // Validate session
+    const session = await this.sessionService.validateRefreshToken(
+      refreshToken,
+      deviceId,
+    );
+
+    if (!session || session.userId.toString() !== userId) {
+      throw new UnauthorizedException('Invalid or expired session');
+    }
+
+    const user = await this.userService.findUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      sessionId: session.id,
     };
   }
 
@@ -76,28 +124,29 @@ export class AuthService {
     return { id: user.id, email: user.email };
   }
 
-  async validateRefreshToken(userId: string, refreshToken: string) {
-    const user = await this.userService.findUserById(userId);
-    if (!user) throw new NotFoundException('User not found!');
-    const isRefreshTokenMatched = await bcrypt.compare(
-      //this is for invalidating or revoking the refresh token when the user logs out
-      refreshToken,
-      user.hashedRefreshToken,
-    );
-    if (!isRefreshTokenMatched)
-      throw new UnauthorizedException('Invalid refresh token');
-    return { id: user.id, firstName: user.firstName, lastName: user.lastName };
-  }
+  async refresh(
+    userId: string,
+    name: string,
+    deviceId: string,
+    sessionId: string,
+  ) {
+    // Get existing session to preserve device info
+    const existingSession = await this.sessionService.getSessionById(sessionId);
 
-  async refresh(userId: string, name: string) {
-    const { accessToken, refreshToken } = await this.generateTokens(userId);
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10); //this is done for invalidating or revoking the refresh token when the user logs out to prevent the user from using the old refresh token to get a new access token
-    await this.userService.updateHashedRefreshToken(userId, hashedRefreshToken);
+    if (!existingSession) {
+      throw new UnauthorizedException('Session not found');
+    }
+
+    // Generate new tokens
+    const tokens = await this.generateTokens(
+      userId,
+      existingSession.deviceInfo,
+    );
+
     return {
       id: userId,
       name,
-      accessToken,
-      refreshToken,
+      ...tokens,
     };
   }
 
@@ -107,8 +156,16 @@ export class AuthService {
     return await this.userService.create(googleUser);
   }
 
-  async logOut(userId: string) {
-    return await this.userService.updateHashedRefreshToken(userId, null); //this is done for invalidating or revoking the refresh token when the user logs out to prevent the user from using the old refresh token to get a new access token
+  async logOut(userId: string, sessionId?: string) {
+    if (sessionId) {
+      // Logout specific session
+      await this.sessionService.revokeSession(sessionId);
+    } else {
+      // Logout all sessions
+      await this.sessionService.revokeAllSessions(userId);
+    }
+
+    return { message: 'Logged out successfully' };
   }
 
   async sendOtp(
@@ -174,5 +231,22 @@ export class AuthService {
       message: 'Phone number verified successfully',
       data: updatedUser,
     };
+  }
+
+  private parseExpiresIn(expiresIn: string): number {
+    const match = expiresIn.match(/^(\d+)([smhd])$/);
+    if (!match) return 7 * 24 * 60 * 60 * 1000; // Default 7 days
+
+    const value = parseInt(match[1]);
+    const unit = match[2];
+
+    const multipliers = {
+      s: 1000,
+      m: 60 * 1000,
+      h: 60 * 60 * 1000,
+      d: 24 * 60 * 60 * 1000,
+    };
+
+    return value * multipliers[unit];
   }
 }

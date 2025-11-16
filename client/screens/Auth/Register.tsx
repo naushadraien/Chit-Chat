@@ -43,7 +43,12 @@ const RegisterScreen = () => {
 
   const { mutate: signUp, isPending } = useMutation({
     mutationFn: async (data: RegisterFormData) => {
-      return await requestAPI(authApi.signUp(data));
+      return await requestAPI(
+        authApi.signUp({
+          email: data.email,
+          password: data.password,
+        })
+      );
     },
     onSuccess: (data) => {
       router.replace("/login");
