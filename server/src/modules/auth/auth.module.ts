@@ -44,5 +44,6 @@ import { SessionModule } from 'src/modules/session/session.module';
     },
     BcryptProvider,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

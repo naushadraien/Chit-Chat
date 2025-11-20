@@ -1,15 +1,16 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './modules/auth/auth.module';
-import { DatabaseModule } from './database/database.module';
-import { RequestLoggerMiddleware } from './common/middlewares/request-logger.middleware';
-import { UserModule } from './modules/user/user.module';
-import { validateConfig } from './config/validation/env.validation';
-import { SessionModule } from './modules/session/session.module';
-import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './common/filters/all-exception-filter';
+import { RequestLoggerMiddleware } from './common/middlewares/request-logger.middleware';
+import { validateConfig } from './config/validation/env.validation';
+import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { SessionModule } from './modules/session/session.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AllExceptionsFilter } from './common/filters/all-exception-filter';
     AuthModule,
     UserModule,
     SessionModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
