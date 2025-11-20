@@ -6,7 +6,7 @@ import {
 import {
   ALLOWED_FILE_TYPES,
   MAX_FILE_SIZE,
-} from 'src/upload/constants/file-validation.constants';
+} from 'src/modules/upload/constants/file-validation.constants';
 
 export const ValidateFile = (isFileRequired: boolean = true) => {
   return new ParseFilePipe({

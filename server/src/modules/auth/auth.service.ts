@@ -10,15 +10,15 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import refreshConfig from 'src/config/refresh.config';
 import { DeviceInfo } from 'src/database/schemas/session.schema';
-import { EmailService } from 'src/email/email.service';
-import { SessionService } from 'src/session/session.service';
-import { UserData } from 'src/types/userData';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { UserService } from 'src/user/user.service';
-import { GenerateOTP } from 'src/utils/generate-otp.utils';
+import { EmailService } from 'src/modules/email/email.service';
+import { SessionService } from 'src/modules/session/session.service';
+import { UserData } from 'src/common/types/userData';
+import { CreateUserDto } from 'src/modules/user/dto/create-user.dto';
+import { UserService } from 'src/modules/user/user.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { AuthJWTPayload } from './types/auth.jwtPayload';
+import { GenerateOTP } from 'src/common/utils/generate-otp.utils';
 
 @Injectable()
 export class AuthService {

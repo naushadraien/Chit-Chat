@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { TokenExpiredError, JsonWebTokenError } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
-import { IS_PUBLIC_KEY } from 'src/auth/decorators/public.decorator';
+import { IS_PUBLIC_KEY } from 'src/modules/auth/decorators/public.decorator';
 import { Request } from 'express';
 
 export enum AuthErrorType {

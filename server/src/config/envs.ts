@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { validateConfig } from '../validation/env.validation';
+import { validateConfig } from './validation/env.validation';
 
 // Load .env file before validation
 config();

@@ -14,8 +14,8 @@ import {
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Response } from 'express';
 import frontendConfig from 'src/config/frontend.config';
-import { UserData } from 'src/types/userData';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { UserData } from 'src/common/types/userData';
+import { CreateUserDto } from 'src/modules/user/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { SendOtpDto } from './dto/send-otp.dto';
@@ -25,7 +25,7 @@ import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
 import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
 import { DeviceInfo } from 'src/database/schemas/session.schema';
 import { LogoutDto } from './dto/logout.dto';
-import { SessionService } from 'src/session/session.service';
+import { SessionService } from 'src/modules/session/session.service';
 
 @Controller('auth')
 export class AuthController {

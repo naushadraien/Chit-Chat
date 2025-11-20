@@ -8,7 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { CloudinaryResult } from './type';
 import { UploadService } from './upload.service';
 import { ValidateFile } from 'src/common/decorators/file-upload.decorator';

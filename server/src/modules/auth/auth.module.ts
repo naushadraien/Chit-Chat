@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { WsJwtStrategy } from 'src/auth/strategies/web-socket.strategy';
+import { WsJwtStrategy } from 'src/modules/auth/strategies/web-socket.strategy';
 import frontendConfig from 'src/config/frontend.config';
 import googleOauthConfig from 'src/config/google-oauth.config';
 import jwtConfig from 'src/config/jwt.config';
 import refreshConfig from 'src/config/refresh.config';
-import { EmailModule } from 'src/email/email.module';
-import { UserModule } from 'src/user/user.module';
+import { EmailModule } from 'src/modules/email/email.module';
+import { UserModule } from 'src/modules/user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard';
@@ -17,7 +17,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
-import { SessionModule } from 'src/session/session.module';
+import { SessionModule } from 'src/modules/session/session.module';
 
 @Module({
   imports: [

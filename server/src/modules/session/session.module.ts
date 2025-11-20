@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Session, SessionSchema } from 'src/database/schemas/session.schema';
 import { SessionController } from './session.controller';
 import { SessionService } from './session.service';
-import { BcryptProvider } from 'src/auth/providers/bcrypt.provider';
+import { BcryptProvider } from 'src/modules/auth/providers/bcrypt.provider';
 
 @Module({
   imports: [
