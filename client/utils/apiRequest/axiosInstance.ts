@@ -55,6 +55,13 @@ export const clearAxiosConfig = (): void => {
   delete axiosInstance.defaults.headers.common["Authorization"];
 };
 
+const logout = async () => {
+  // Clean up and redirect
+  await Promise.all([clearTokensFromAsyncStorage(), clearUserDetails()]);
+  clearAxiosConfig();
+  router.replace("/");
+};
+
 // Token refresh function
 export const refreshToken = async ({
   originalRequest,
@@ -90,9 +97,7 @@ export const refreshToken = async ({
     refreshSubscribers = [];
 
     // Clean up and redirect
-    await Promise.all([clearTokensFromAsyncStorage(), clearUserDetails()]);
-    clearAxiosConfig();
-    router.replace("/");
+    await logout();
 
     return Promise.reject(error);
   }
@@ -135,26 +140,29 @@ axiosInstance.interceptors.response.use(
   },
   async (error: AxiosError): Promise<any> => {
     const originalRequest = error.config as InternalAxiosRequestConfig;
-    const errorData = error.response?.data as any;
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      errorData?.errorType === "token_expired"
-    ) {
-      originalRequest._retry = true;
+    if (error.response?.status === 401) {
+      const errorType = (error.response?.data as any)?.errorType;
+      const shouldRelogin = (error.response?.data as any)?.shouldRelogin;
 
-      if (isRefreshing) {
-        // Wait for token refresh if it's already in progress
-        return new Promise((resolve) => {
-          addRefreshSubscriber((token: string) => {
-            originalRequest.headers["Authorization"] = `Bearer ${token}`;
-            resolve(axiosInstance(originalRequest));
+      if (errorType === "token_expired" && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        if (isRefreshing) {
+          // Wait for token refresh if it's already in progress
+          return new Promise((resolve) => {
+            addRefreshSubscriber((token: string) => {
+              originalRequest.headers["Authorization"] = `Bearer ${token}`;
+              resolve(axiosInstance(originalRequest));
+            });
           });
-        });
+        }
+        return refreshToken({ originalRequest });
       }
 
-      return refreshToken({ originalRequest });
+      if (shouldRelogin) {
+        await logout();
+      }
     }
 
     // Handle network errors

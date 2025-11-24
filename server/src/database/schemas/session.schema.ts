@@ -20,7 +20,7 @@ export interface DeviceInfo {
   toJSON: {
     virtuals: true,
     transform: (doc, ret: any) => {
-      ret.id = ret._id;
+      ret.id = ret._id.toString();
       delete ret._id;
       delete ret.__v;
       delete ret.refreshToken; // Never expose refresh token

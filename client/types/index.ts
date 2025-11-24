@@ -36,6 +36,5 @@ export type AuthProviderContext = {
   onLogout: () => Promise<void>;
   isLoading: boolean;
   userDetails: UserDetails | null;
-  refreshToken: () => Promise<string>;
   updateUserDetails?: (userData: Partial<UserDetails>) => Promise<void>;
 };

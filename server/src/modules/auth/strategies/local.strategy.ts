@@ -34,6 +34,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     };
 
     // Return both user and device info
-    return { user, deviceInfo };
+    return { deviceInfo, ...user };
   }
 }

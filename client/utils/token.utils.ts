@@ -10,28 +10,23 @@ import {
   USER_DEVICE_ID,
 } from "../constants/AsyncStorage";
 import { clearUserDetails } from "./auth.utils";
-import { safeAsyncStorage } from "./storage.utils";
+import { expoSecureStorage } from "./storage.utils";
 
 // Token functions
 export const setTokensToAsyncStorage = async (tokens: {
   accessToken: string;
   refreshToken?: string;
 }) => {
-  await safeAsyncStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+  await expoSecureStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
   if (tokens.refreshToken) {
-    await safeAsyncStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    await expoSecureStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
   }
-
-  // Notify app about token update
-  storageEventEmitter.emit("storageUpdate", {
-    token: tokens.accessToken,
-  });
 };
 
 export const clearTokensFromAsyncStorage = async () => {
   await Promise.all([
-    safeAsyncStorage.removeItem(ACCESS_TOKEN_KEY),
-    safeAsyncStorage.removeItem(REFRESH_TOKEN_KEY),
+    expoSecureStorage.removeItem(ACCESS_TOKEN_KEY),
+    expoSecureStorage.removeItem(REFRESH_TOKEN_KEY),
   ]);
 };
 
@@ -40,8 +35,8 @@ export const getTokensFromAsyncStorage = async (): Promise<{
   refreshToken: string;
 } | null> => {
   const [accessToken, refreshToken] = await Promise.all([
-    safeAsyncStorage.getItem<string>(ACCESS_TOKEN_KEY),
-    safeAsyncStorage.getItem<string>(REFRESH_TOKEN_KEY),
+    expoSecureStorage.getItem<string>(ACCESS_TOKEN_KEY),
+    expoSecureStorage.getItem<string>(REFRESH_TOKEN_KEY),
   ]);
 
   return accessToken && refreshToken ? { accessToken, refreshToken } : null;
@@ -64,6 +59,14 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
     if (response.status === 200) {
       const { accessToken, refreshToken } = response.data.data;
       await setTokensToAsyncStorage({ ...tokens, accessToken, refreshToken });
+
+      if (accessToken) {
+        // Notify app about token update
+        storageEventEmitter.emit("storageUpdate", {
+          token: accessToken,
+        });
+      }
+
       return accessToken;
     } else {
       showToast({ type: "error", text1: "Failed to refresh access token" });
@@ -84,21 +87,21 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
 
 // Device and push token functions
 export const setDeviceIdToAsyncStorage = async (deviceId: string) =>
-  safeAsyncStorage.setItem(USER_DEVICE_ID, deviceId);
+  expoSecureStorage.setItem(USER_DEVICE_ID, deviceId);
 
 export const setPushTokenToAsyncStorage = async (pushToken: string) =>
-  safeAsyncStorage.setItem(PUSH_TOKEN_KEY, pushToken);
+  expoSecureStorage.setItem(PUSH_TOKEN_KEY, pushToken);
 
 export const getDeviceIdFromAsyncStorage = async (): Promise<{
   deviceId: string;
 } | null> => {
-  const deviceId = await safeAsyncStorage.getItem<string>(USER_DEVICE_ID);
+  const deviceId = await expoSecureStorage.getItem<string>(USER_DEVICE_ID);
   return deviceId ? { deviceId } : null;
 };
 
 export const getPushTokenFromAsyncStorage = async (): Promise<{
   pushToken: string;
 } | null> => {
-  const pushToken = await safeAsyncStorage.getItem<string>(PUSH_TOKEN_KEY);
+  const pushToken = await expoSecureStorage.getItem<string>(PUSH_TOKEN_KEY);
   return pushToken ? { pushToken } : null;
 };
