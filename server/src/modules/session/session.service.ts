@@ -26,11 +26,10 @@ export class SessionService {
     const hashedRefreshToken = await this.bcryptProvider.hashData(refreshToken);
 
     // Check if a session already exists for this device
-    const existingSession = await this.sessionModel.findOne({
-      userId: new Types.ObjectId(userId),
-      'deviceInfo.deviceId': deviceInfo.deviceId,
-      isActive: true,
-    });
+    const existingSession = await this.findActiveSessionByDevice(
+      userId,
+      deviceInfo.deviceId,
+    );
 
     if (existingSession) {
       // Update existing session
@@ -155,5 +154,35 @@ export class SessionService {
     });
 
     return result.deletedCount;
+  }
+
+  async findActiveSessionByDevice(userId: string, deviceId: string) {
+    return this.sessionModel
+      .findOne({
+        userId: new Types.ObjectId(userId),
+        'deviceInfo.deviceId': deviceId,
+        isActive: true,
+        expiresAt: { $gt: new Date() },
+      })
+      .exec();
+  }
+
+  async updateSessionTokens(
+    sessionId: string,
+    refreshToken: string,
+    expiresAt: Date,
+  ) {
+    const hashedToken = await this.bcryptProvider.hashData(refreshToken);
+    return this.sessionModel
+      .findByIdAndUpdate(
+        sessionId,
+        {
+          refreshToken: hashedToken,
+          expiresAt,
+          lastActivityAt: new Date(),
+        },
+        { new: true },
+      )
+      .exec();
   }
 }

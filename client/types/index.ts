@@ -29,6 +29,7 @@ export type AuthProviderContext = {
     {
       email: string;
       password: string;
+      [key: string]: unknown;
     },
     unknown
   >;

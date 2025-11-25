@@ -3,7 +3,7 @@ import { ApiRequestConfig } from "@/utils/apiRequest/requestApi";
 
 export const authApi = {
   login: (
-    data: Omit<RegisterFormData, "confirmPassword">
+    data: Omit<RegisterFormData, "confirmPassword"> & { [key: string]: unknown }
   ): ApiRequestConfig => {
     return {
       method: "post",

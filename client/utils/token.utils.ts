@@ -11,9 +11,10 @@ import {
 } from "../constants/AsyncStorage";
 import { clearUserDetails } from "./auth.utils";
 import { expoSecureStorage } from "./storage.utils";
+import { getDeviceData } from "./device";
 
 // Token functions
-export const setTokensToAsyncStorage = async (tokens: {
+export const setTokensToExpoSecureStorage = async (tokens: {
   accessToken: string;
   refreshToken?: string;
 }) => {
@@ -23,14 +24,14 @@ export const setTokensToAsyncStorage = async (tokens: {
   }
 };
 
-export const clearTokensFromAsyncStorage = async () => {
+export const clearTokensFromExpoSecureStorage = async () => {
   await Promise.all([
     expoSecureStorage.removeItem(ACCESS_TOKEN_KEY),
     expoSecureStorage.removeItem(REFRESH_TOKEN_KEY),
   ]);
 };
 
-export const getTokensFromAsyncStorage = async (): Promise<{
+export const getTokensFromExpoSecureStorage = async (): Promise<{
   accessToken: string;
   refreshToken: string;
 } | null> => {
@@ -44,21 +45,27 @@ export const getTokensFromAsyncStorage = async (): Promise<{
 
 export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
   try {
-    const tokens = await getTokensFromAsyncStorage();
+    const tokens = await getTokensFromExpoSecureStorage();
     if (!tokens?.refreshToken) {
       showToast({ type: "error", text1: "No refresh token available" });
       throw new Error("No refresh token available");
     }
 
+    const deviceInfo = await getDeviceData();
+
     const response = await axios.post(
       `${envs.BACKEND_URL}/auth/refresh`,
-      { refreshToken: tokens.refreshToken },
+      { refreshToken: tokens.refreshToken, deviceId: deviceInfo.uniqueId },
       { headers: { "Content-Type": "application/json" } }
     );
 
     if (response.status === 200) {
-      const { accessToken, refreshToken } = response.data.data;
-      await setTokensToAsyncStorage({ ...tokens, accessToken, refreshToken });
+      const { accessToken, refreshToken } = response.data;
+      await setTokensToExpoSecureStorage({
+        ...tokens,
+        accessToken,
+        refreshToken,
+      });
 
       if (accessToken) {
         // Notify app about token update
@@ -77,7 +84,7 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
       type: "error",
       text1: "Refresh token is invalid. Logging out...",
     });
-    await clearTokensFromAsyncStorage();
+    await clearTokensFromExpoSecureStorage();
     await clearUserDetails();
     clearAxiosConfig();
     router.replace("/start-up");
@@ -86,20 +93,20 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
 };
 
 // Device and push token functions
-export const setDeviceIdToAsyncStorage = async (deviceId: string) =>
+export const setDeviceIdToExpoSecureStorage = async (deviceId: string) =>
   expoSecureStorage.setItem(USER_DEVICE_ID, deviceId);
 
-export const setPushTokenToAsyncStorage = async (pushToken: string) =>
+export const setPushTokenToExpoSecureStorage = async (pushToken: string) =>
   expoSecureStorage.setItem(PUSH_TOKEN_KEY, pushToken);
 
-export const getDeviceIdFromAsyncStorage = async (): Promise<{
+export const getDeviceIdFromExpoSecureStorage = async (): Promise<{
   deviceId: string;
 } | null> => {
   const deviceId = await expoSecureStorage.getItem<string>(USER_DEVICE_ID);
   return deviceId ? { deviceId } : null;
 };
 
-export const getPushTokenFromAsyncStorage = async (): Promise<{
+export const getPushTokenFromExpoSecureStorage = async (): Promise<{
   pushToken: string;
 } | null> => {
   const pushToken = await expoSecureStorage.getItem<string>(PUSH_TOKEN_KEY);

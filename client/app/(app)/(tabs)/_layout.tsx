@@ -57,6 +57,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: inactiveColor,
         tabBarButton: HapticTab,
+        lazy: true,
+        freezeOnBlur: true,
         tabBarBackground: () => (
           <View
             style={[
@@ -83,8 +85,8 @@ export default function TabLayout() {
               borderTopWidth: 0,
             },
           }),
-          height: 65,
-          paddingBottom: Math.max(insets.bottom, 10),
+          paddingBottom: insets.bottom,
+          height: 60 + insets.bottom,
         },
         tabBarShowLabel: false,
       }}

@@ -9,9 +9,9 @@ import axios, {
 import { router } from "expo-router";
 import { clearUserDetails } from "../auth.utils";
 import {
-  clearTokensFromAsyncStorage,
-  getDeviceIdFromAsyncStorage,
-  getTokensFromAsyncStorage,
+  clearTokensFromExpoSecureStorage,
+  getDeviceIdFromExpoSecureStorage,
+  getTokensFromExpoSecureStorage,
   refreshAccessToken,
 } from "../token.utils";
 
@@ -57,7 +57,7 @@ export const clearAxiosConfig = (): void => {
 
 const logout = async () => {
   // Clean up and redirect
-  await Promise.all([clearTokensFromAsyncStorage(), clearUserDetails()]);
+  await Promise.all([clearTokensFromExpoSecureStorage(), clearUserDetails()]);
   clearAxiosConfig();
   router.replace("/");
 };
@@ -72,6 +72,7 @@ export const refreshToken = async ({
 
   try {
     const newAccessToken = await refreshAccessToken(clearAxiosConfig);
+    console.log("🚀 ~ refreshToken ~ newAccessToken:", newAccessToken);
 
     // Update headers with new token
     axiosInstance.defaults.headers.common[
@@ -110,8 +111,8 @@ axiosInstance.interceptors.request.use(
   ): Promise<InternalAxiosRequestConfig> => {
     try {
       const [tokens, userDeviceID] = await Promise.all([
-        getTokensFromAsyncStorage(),
-        getDeviceIdFromAsyncStorage(),
+        getTokensFromExpoSecureStorage(),
+        getDeviceIdFromExpoSecureStorage(),
       ]);
 
       if (tokens?.accessToken) {

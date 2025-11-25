@@ -8,9 +8,9 @@ import {
   setUsersToAsyncStorage,
 } from "@/utils/auth.utils";
 import {
-  clearTokensFromAsyncStorage,
-  getTokensFromAsyncStorage,
-  setTokensToAsyncStorage,
+  clearTokensFromExpoSecureStorage,
+  getTokensFromExpoSecureStorage,
+  setTokensToExpoSecureStorage,
 } from "@/utils/token.utils";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       try {
         // Load tokens and user data in parallel for performance
         const [tokens, userData] = await Promise.all([
-          getTokensFromAsyncStorage(),
+          getTokensFromExpoSecureStorage(),
           getUserDetailsFromAsyncStorage(),
         ]);
 
@@ -120,7 +120,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       // Store authentication data
       await Promise.all([
-        setTokensToAsyncStorage({
+        setTokensToExpoSecureStorage({
           accessToken,
           refreshToken,
         }),
@@ -166,7 +166,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       }
 
       // Clear stored auth data
-      await Promise.all([clearTokensFromAsyncStorage(), clearUserDetails()]);
+      await Promise.all([
+        clearTokensFromExpoSecureStorage(),
+        clearUserDetails(),
+      ]);
 
       // Reset auth state
       setAuthState({ authenticated: false, token: "" });
@@ -191,13 +194,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
    * Login mutation
    */
   const { mutate: onLogin, isPending: isLogging } = useMutation({
-    mutationFn: async (data: { email: string; password: string }) => {
-      return await requestAPI<LoginResponse>(
-        authApi.login({
-          email: data.email,
-          password: data.password,
-        })
-      );
+    mutationFn: async (data: {
+      email: string;
+      password: string;
+      [key: string]: unknown;
+    }) => {
+      return await requestAPI<LoginResponse>(authApi.login(data));
     },
     onSuccess: handleLoginSuccess,
     onError: (error) => {

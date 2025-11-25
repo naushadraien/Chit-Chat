@@ -7,6 +7,7 @@ import { InputField } from "@/components/new-atomic/Input";
 import { useAuth } from "@/providers/AuthProvider";
 import loginSchema, { LoginFormData } from "@/schema/login.schema";
 import { COLORS, FONTFAMILIES } from "@/theme";
+import { getDeviceData } from "@/utils/device";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -32,10 +33,18 @@ const LoginScreen = () => {
     },
   });
 
-  const onSubmit = (data: LoginFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
+    const deviceInfo = await getDeviceData();
+
     onLogin({
       email: data.email,
       password: data.password,
+      deviceId: deviceInfo.uniqueId,
+      deviceName: deviceInfo.deviceName,
+      deviceType: deviceInfo.deviceType,
+      osName: deviceInfo.systemName,
+      osVersion: deviceInfo.systemVersion,
+      appVersion: deviceInfo.appVersion,
     });
   };
 

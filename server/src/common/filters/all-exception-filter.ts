@@ -16,9 +16,10 @@ interface ErrorResponse {
   method: string;
   message: string;
   error?: string;
-  errors?: any[];
+  errors?: unknown[];
   requestId?: string;
   stack?: string;
+  [key: string]: unknown; // Allow additional fields
 }
 
 @Catch()
@@ -34,6 +35,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let message = 'Internal server error';
     let errorName = 'InternalServerError';
     let validationErrors: any[] | undefined;
+    let customFields: any = {}; // Store custom fields
 
     // Handle different types of exceptions
     if (exception instanceof HttpException) {
@@ -42,6 +44,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
       if (typeof exceptionResponse === 'object') {
         const responseObj = exceptionResponse as any;
+
+        // Extract ALL fields from the custom response
+        customFields = { ...responseObj };
+
         message = responseObj.message || exception.message;
         errorName = responseObj.error || exception.name;
 
@@ -74,6 +80,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       errorName = exception.name;
     }
 
+    // Build response with custom fields preserved
     const errorResponse: ErrorResponse = {
       statusCode: status,
       timestamp: new Date().toISOString(),
@@ -82,6 +89,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message,
       error: errorName,
       requestId: request.headers['x-request-id'] as string,
+      ...customFields, // Spread all custom fields (including errorType)
     };
 
     // Add validation errors if present
@@ -101,6 +109,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       url: request.url,
       statusCode: status,
       errorName,
+      errorType: (customFields as any).errorType, // Log errorType
       userId: (request as any).user?.id,
       ip: request.ip,
       userAgent: request.headers['user-agent'],
