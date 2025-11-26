@@ -1,10 +1,14 @@
+import { COLORS } from "@/theme";
 import { ActivityIndicator, View } from "react-native";
 import { Divider } from "../Divider";
 import { Typography } from "../Typography";
-import { COLORS } from "@/theme";
 
-export function LoadingSpinner() {
-  return <ActivityIndicator size="large" color={COLORS.PRIMARYBLUE} />;
+export function LoadingSpinner({
+  size = "large",
+}: {
+  size?: number | "small" | "large" | undefined;
+}) {
+  return <ActivityIndicator size={size} color={COLORS.PRIMARYBLUE} />;
 }
 
 export function NoContent({ title = "Data" }: { title?: string }) {

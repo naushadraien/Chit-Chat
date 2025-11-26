@@ -1,16 +1,31 @@
-import { View, Text, Pressable } from "react-native";
-import React from "react";
+import { IconNameType } from "@/assets/icons";
+import { Loader } from "@/components/atomic/Loader";
+import { LoadingSpinner } from "@/components/atomic/Loader/LoadingSpinner";
 import { SvgIcon } from "@/components/atomic/SvgIcon";
 import { Typography } from "@/components/atomic/Typography";
-import { IconNameType } from "@/assets/icons";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Pressable, View } from "react-native";
 
 type Props = {
-  iconName: IconNameType;
+  iconName?: IconNameType;
   title: string;
-  onPress?: () => {};
+  onPress?: VoidFunction;
+  ionIcon?: keyof typeof Ionicons.glyphMap;
+  size?: number;
+  isLoading?: boolean;
+  loadingText?: string;
 };
 
-export function MenuItem({ iconName, title, onPress }: Props) {
+export function MenuItem({
+  title,
+  onPress,
+  ionIcon,
+  iconName,
+  size = 19,
+  isLoading,
+  loadingText,
+}: Props) {
   return (
     <Pressable
       style={{
@@ -19,6 +34,7 @@ export function MenuItem({ iconName, title, onPress }: Props) {
         alignItems: "center",
       }}
       onPress={onPress}
+      disabled={isLoading}
     >
       <View
         style={{
@@ -27,14 +43,20 @@ export function MenuItem({ iconName, title, onPress }: Props) {
           alignItems: "center",
         }}
       >
-        <SvgIcon name={iconName} size={19} />
+        {isLoading ? (
+          <LoadingSpinner size={"small"} />
+        ) : ionIcon ? (
+          <Ionicons name={ionIcon} size={size} />
+        ) : iconName ? (
+          <SvgIcon name={iconName} size={size} />
+        ) : null}
         <Typography
           fontFamily="MULISH_SEMIBOLD"
           fontSize="MD"
           lineHeight="MD"
           color="INPUTTEXTCOLOR"
         >
-          {title}
+          {isLoading && loadingText ? loadingText : title}
         </Typography>
       </View>
       <SvgIcon name="chevron-right-icon" size={12} />

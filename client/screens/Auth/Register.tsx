@@ -15,7 +15,7 @@ import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 const RegisterScreen = () => {
   const [isPressedEyeBtn, setIsPressedEyeBtn] = useState<{
@@ -85,7 +85,6 @@ const RegisterScreen = () => {
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
-        enableOnAndroid
       >
         <View>
           <View

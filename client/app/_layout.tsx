@@ -8,6 +8,7 @@ import "react-native-reanimated";
 import { AuthProvider } from "@/providers/AuthProvider";
 import TanstackQueryProvider from "@/providers/TanstackQueryProvider";
 import { ToastProvider } from "@/providers/ToastProvider";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -36,15 +37,17 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <TanstackQueryProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <StatusBar style="auto" />
-            <Slot />
-          </AuthProvider>
-        </ToastProvider>
-      </TanstackQueryProvider>
-    </SafeAreaProvider>
+    <KeyboardProvider>
+      <SafeAreaProvider>
+        <TanstackQueryProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <StatusBar style="auto" />
+              <Slot />
+            </AuthProvider>
+          </ToastProvider>
+        </TanstackQueryProvider>
+      </SafeAreaProvider>
+    </KeyboardProvider>
   );
 }

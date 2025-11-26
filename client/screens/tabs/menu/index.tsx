@@ -9,7 +9,13 @@ import React from "react";
 import { View } from "react-native";
 
 const MenuScreen = () => {
-  const { userDetails } = useAuth();
+  const { userDetails, onLogout, isLoading } = useAuth();
+
+  const handleLogout = () =>
+    onLogout({
+      sessionId: userDetails?.sessionId ?? "",
+    });
+
   return (
     <View
       style={{
@@ -43,6 +49,15 @@ const MenuScreen = () => {
         <Divider />
         <MenuItem iconName="help-icon" title="Help" />
         <MenuItem iconName="email-icon" title="Invite Your Friends" />
+        <Divider />
+        <MenuItem
+          ionIcon="exit-outline"
+          title="Log out"
+          size={22}
+          onPress={handleLogout}
+          isLoading={isLoading}
+          loadingText="Signing Out..."
+        />
       </View>
     </View>
   );

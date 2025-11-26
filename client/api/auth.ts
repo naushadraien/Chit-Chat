@@ -20,6 +20,13 @@ export const authApi = {
       url: "/auth/signup",
     };
   },
+  logout: (data: { sessionId: string }): ApiRequestConfig => {
+    return {
+      method: "post",
+      data,
+      url: "/auth/logout",
+    };
+  },
   refreshAccessToken: (data: { refreshToken: string }): ApiRequestConfig => {
     return {
       method: "post",

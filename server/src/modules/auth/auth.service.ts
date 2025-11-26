@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
@@ -31,6 +32,9 @@ export class AuthService {
     @Inject(refreshConfig.KEY) // Inject the refresh token configuration using the ConfigService
     private refreshTokenConfig: ConfigType<typeof refreshConfig>,
   ) {}
+
+  private logger = new Logger(AuthService.name);
+
   async registerUser(createUserDto: CreateUserDto) {
     const existedUser = await this.userService.findByEmail(createUserDto.email);
     if (existedUser) throw new ConflictException('User already exists');
@@ -58,6 +62,7 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      verificationStatus: user.verificationStatus,
       ...tokens,
     };
   }
@@ -248,5 +253,13 @@ export class AuthService {
     };
 
     return value * multipliers[unit];
+  }
+
+  async loggedInUserprofile(userId: string) {
+    try {
+      return await this.userService.findUserById(userId);
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 }

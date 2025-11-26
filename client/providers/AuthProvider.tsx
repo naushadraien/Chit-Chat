@@ -18,7 +18,6 @@ import {
   createContext,
   PropsWithChildren,
   use,
-  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -38,7 +37,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   // Loading states with specific flags for different operations
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { showToast } = useToast();
 
@@ -47,7 +45,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
    */
   useEffect(() => {
     const loadInitialData = async () => {
-      setIsLoadingInitial(true);
       try {
         // Load tokens and user data in parallel for performance
         const [tokens, userData] = await Promise.all([
@@ -134,7 +131,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       });
       setUserDetails(user);
 
-      router.replace("/(app)/(tabs)");
+      router.replace("/");
 
       // Show success message
       showToast({
@@ -147,48 +144,27 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         type: "error",
         text1: "Login succeeded but failed to save session",
       });
+    } finally {
+      setIsLoadingInitial(false);
     }
   };
 
-  /**
-   * Handle logout process
-   */
-  const handleLogout = useCallback(async () => {
-    try {
-      setIsLoggingOut(true);
+  const handleLogoutSuccess = async () => {
+    await Promise.all([clearTokensFromExpoSecureStorage(), clearUserDetails()]);
+    setAuthState({ authenticated: false, token: "" });
+    setUserDetails(null);
+    router.replace("/login");
+    showToast({
+      type: "info",
+      text1: "You've been logged out",
+    });
+  };
 
-      // Call logout API if available
-      try {
-        // await requestAPI(authApi.logout());
-      } catch (error) {
-        // Logout API can fail silently - we still want to clear local state
-        console.warn("Logout API call failed:", error);
-      }
-
-      // Clear stored auth data
-      await Promise.all([
-        clearTokensFromExpoSecureStorage(),
-        clearUserDetails(),
-      ]);
-
-      // Reset auth state
-      setAuthState({ authenticated: false, token: "" });
-      setUserDetails(null);
-
-      showToast({
-        type: "info",
-        text1: "You've been logged out",
-      });
-    } catch (error) {
-      console.log("Error during logout:", error);
-      showToast({
-        type: "error",
-        text1: "Failed to log out properly",
-      });
-    } finally {
-      setIsLoggingOut(false);
-    }
-  }, []);
+  const { mutate: onLogout, isPending: isLoggingOut } = useMutation({
+    mutationFn: (data: { sessionId: string }) =>
+      requestAPI(authApi.logout(data)),
+    onSuccess: handleLogoutSuccess,
+  });
 
   /**
    * Login mutation
@@ -202,10 +178,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       return await requestAPI<LoginResponse>(authApi.login(data));
     },
     onSuccess: handleLoginSuccess,
-    onError: (error) => {
-      console.log("Login failed:", error);
-      // Toast is already shown by requestAPI
-    },
   });
 
   // Determine overall loading state
@@ -216,7 +188,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     onLogin,
     authState,
     isLoading,
-    onLogout: handleLogout,
+    onLogout,
     userDetails,
     updateUserDetails: handleUpdateUserDetails,
   };

@@ -84,10 +84,12 @@ export const refreshAccessToken = async (clearAxiosConfig: () => void) => {
       type: "error",
       text1: "Refresh token is invalid. Logging out...",
     });
-    await clearTokensFromExpoSecureStorage();
-    await clearUserDetails();
+    await Promise.all([
+      await clearTokensFromExpoSecureStorage(),
+      await clearUserDetails(),
+    ]);
     clearAxiosConfig();
-    router.replace("/start-up");
+    router.replace("/login");
     throw error;
   }
 };

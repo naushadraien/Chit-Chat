@@ -18,6 +18,7 @@ export type LoginResponse = {
   refreshToken: string;
   updatedAt: string;
   verificationStatus: VerificationStatus;
+  sessionId: string;
 };
 
 export type UserDetails = Omit<LoginResponse, "accessToken" | "refreshToken">;
@@ -34,7 +35,14 @@ export type AuthProviderContext = {
     unknown
   >;
   authState: { authenticated: boolean | null; token: string | null };
-  onLogout: () => Promise<void>;
+  onLogout: UseMutateFunction<
+    any,
+    Error,
+    {
+      sessionId: string;
+    },
+    unknown
+  >;
   isLoading: boolean;
   userDetails: UserDetails | null;
   updateUserDetails?: (userData: Partial<UserDetails>) => Promise<void>;

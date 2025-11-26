@@ -26,6 +26,7 @@ import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
 import { DeviceInfo } from 'src/database/schemas/session.schema';
 import { LogoutDto } from './dto/logout.dto';
 import { SessionService } from 'src/modules/session/session.service';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -114,6 +115,26 @@ export class AuthController {
       `${frontendURL}/api/auth/google/callback?${params.toString()}`,
     );
   } //callback means redirect to some page when login
+
+  @Get('profile')
+  @ApiOperation({
+    summary: 'Get logged in user detail',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    example: {},
+  })
+  async loggedInUserprofile(
+    @Request()
+    req: {
+      user: {
+        id: string;
+      };
+    },
+  ) {
+    const userId = req.user.id;
+    return await this.authService.loggedInUserprofile(userId);
+  }
 
   //Removed the @UseGuards(JwtAuthGuard) decorator as all the api routes are protected by the JwtAuthGuard globally
   // @UseGuards(JwtAuthGuard) // only signed in user can call this route
